@@ -24,13 +24,16 @@ RUN npm run build
 FROM nginx:alpine
 
 # Remove config padrão do nginx
-RUN rm -rf /usr/share/nginx/html/*
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
 # Copia build do Vite
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# Copia nginx config customizado (MIME types + SPA routing)
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Expõe porta padrão
 EXPOSE 3005
 
 # Inicia nginx
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -6,14 +6,8 @@ import SuccessScreen from "../../../components/shared/SuccessPopUp";
 import { formatMoney } from "../../../lib/utils";
 import type { MenuItemFormType } from "../../schemas/menuItemSchema";
 import { menuItemSchema } from "../../schemas/menuItemSchema";
+import { MENU_CATEGORY_NAMES } from "../../constants/menuCategories";
 
-const defaultCategories = [
-  "Entradas",
-  "Principais",
-  "Sobremesas",
-  "Bebidas",
-  "Adicionais",
-];
 
 export default function RootCreateMenuItemForm({ onSubmit }: any) {
   const [send, setSend] = useState(false);
@@ -132,7 +126,7 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
               <option value="" disabled hidden>
                 Selecione uma categoria...
               </option>
-              {defaultCategories.map((cat) => (
+              {MENU_CATEGORY_NAMES.map((cat) => (
                 <option key={cat}>{cat}</option>
               ))}
             </select>

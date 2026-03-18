@@ -1,4 +1,4 @@
-import { Beer, Coffee, Grid, Plus, Utensils, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useState } from "react";
 import { PdvHistorySheet } from "../components/pdv/PdvHistorySheet";
 import { PdvAddComandaSheet } from "../components/pdv/PdvAddComandaSheet";
@@ -8,6 +8,7 @@ import { PdvPaymentModal } from "../components/pdv/PdvPaymentModal";
 import { PdvProductModal } from "../components/pdv/PdvProductModal";
 import { PdvTables } from "../components/pdv/PdvTables";
 import { PdvTicketSheet } from "../components/pdv/PdvTicketSheet";
+import { PdvWeightModal } from "../components/pdv/PdvWeightModal";
 
 import { useEffect, useMemo } from "react";
 import LoadingComponent from "../../components/shared/LoadingComponent";
@@ -22,6 +23,7 @@ import type {
   ProductsResponse,
   SelectedProductForObs,
 } from "../../services/products/products.service";
+import { MENU_CATEGORIES_FOR_PDV } from "../constants/menuCategories";
 
 export interface PdvEntity {
   id: string;
@@ -36,12 +38,6 @@ export interface PdvEntity {
   openedAt?: string;
 }
 
-const MENU_CATEGORIES = [
-  { id: "Todos", label: "Todos", icon: <Grid size={18} /> },
-  { id: "Bebidas", label: "Bebidas", icon: <Beer size={18} /> },
-  { id: "Entradas", label: "Entradas", icon: <Coffee size={18} /> },
-  { id: "Principais", label: "Principais", icon: <Utensils size={18} /> },
-];
 
 export default function RootPdvPage() {
   const { data: user } = useAuthenticatedUser();
@@ -67,6 +63,8 @@ export default function RootPdvPage() {
   const [splitCount, setSplitCount] = useState(1);
   const [cartMobileOpen, setCartMobileOpen] = useState(false);
   const [isAddComandaOpen, setIsAddComandaOpen] = useState(false);
+  const [selectedWeightProduct, setSelectedWeightProduct] =
+    useState<SelectedProductForObs | null>(null);
 
   // --- BUSCA DE DADOS ---
   const fetchOrders = async () => {
@@ -255,6 +253,15 @@ export default function RootPdvPage() {
   };
 
   const addToCart = (product: ProductsResponse) => {
+    // Produtos da balança vão para o modal de peso
+    if (product.category?.toLowerCase() === "balanca") {
+      setSelectedWeightProduct({
+        ...product,
+        obs: [],
+        quantity: 1,
+      });
+      return;
+    }
     setSelectedProductForObs({
       ...product,
       obs: [],
@@ -399,6 +406,9 @@ export default function RootPdvPage() {
   const cart = useMemo(() => {
     if (!activeEntity) return [];
 
+    const isScaleNote = (notes: string[]) =>
+      notes?.some((n) => /kg$/i.test(n.trim()));
+
     // Itens que vêm do Backend (já confirmados)
     const backendItems = (activeEntity.items || []).map((item: any) => ({
       id: item.productId,
@@ -408,10 +418,14 @@ export default function RootPdvPage() {
       quantity: item.quantity,
       obs: item.notes || [],
       isFromBackend: true,
+      isScale: isScaleNote(item.notes || []),
     }));
 
     // Itens Locais (ainda não sincronizados - agora estamos sincronizando imediato, mas mantemos por segurança)
-    const localItems = orders[activeEntity.id] || [];
+    const localItems = (orders[activeEntity.id] || []).map((item: any) => ({
+      ...item,
+      isScale: isScaleNote(item.obs || []),
+    }));
 
     return [...backendItems, ...localItems];
   }, [activeEntity, orders]);
@@ -633,7 +647,7 @@ export default function RootPdvPage() {
                 setActiveView={setActiveView}
                 selectedCategory={selectedCategory}
                 setSelectedCategory={setSelectedCategory}
-                categories={MENU_CATEGORIES}
+                categories={MENU_CATEGORIES_FOR_PDV}
                 addToCart={addToCart as any}
               />
             )}
@@ -666,6 +680,17 @@ export default function RootPdvPage() {
         product={selectedProductForObs}
         onClose={() => setSelectedProductForObs(null)}
         onConfirm={(prod) => {
+          confirmAddToCart(prod);
+          setCartMobileOpen(true);
+        }}
+      />
+
+      {/* MODAL: Produto por Peso (Balança) */}
+      <PdvWeightModal
+        product={selectedWeightProduct}
+        onClose={() => setSelectedWeightProduct(null)}
+        onConfirm={(prod) => {
+          setSelectedWeightProduct(null);
           confirmAddToCart(prod);
           setCartMobileOpen(true);
         }}

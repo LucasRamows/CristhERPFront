@@ -63,6 +63,14 @@ export function PdvMenu({
   const isLoading =
     externalLoading !== undefined ? externalLoading : internalLoading;
 
+  const categoriesWithProducts = new Set(products.map((p) => p.category));
+  const visibleCategories = categories.filter(
+    (cat) =>
+      cat.id === "Todos" ||
+      cat.id === "TODOS" ||
+      categoriesWithProducts.has(cat.id),
+  );
+
   return (
     <div className="flex flex-col h-full animate-fade-in">
       {activeEntity && activeEntity.id !== "caixa_balcao" && setActiveView && (
@@ -81,7 +89,7 @@ export function PdvMenu({
 
       {/* Categorias */}
       <div className="flex gap-3 mb-6 overflow-x-auto pb-2 custom-scrollbar shrink-0 no-scrollbar">
-        {categories.map((cat) => (
+        {visibleCategories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}

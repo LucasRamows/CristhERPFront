@@ -1,4 +1,4 @@
-import { CheckCircle, Grid, Minus, Plus, ShoppingCart, X } from "lucide-react";
+import { CheckCircle, Grid, Minus, Plus, Scale, ShoppingCart, X } from "lucide-react";
 import LoadingComponent from "../../../components/shared/LoadingComponent";
 import { Sheet, SheetContent, SheetTitle } from "../../../components/ui/sheet";
 import type { PdvEntity } from "../../pages/RootPdvPage";
@@ -12,6 +12,7 @@ export interface CartItem {
   obs?: string[];
   category?: string;
   code?: string;
+  isScale?: boolean; // produto de balança
 }
 
 export interface PdvTicketSheetProps {
@@ -125,25 +126,35 @@ export function PdvTicketSheet({
 
                           {/* Controles de Quantidade e Observações */}
                           <div className="flex items-center justify-between mt-2">
-                            <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm">
-                              <button
-                                onClick={() => updateQuantity(index, -1)}
-                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500"
-                              >
-                                <Minus size={16} />
-                              </button>
-                              <span className="w-8 text-center font-bold text-sm">
-                                {item.quantity}
-                              </span>
-                              <button
-                                onClick={() => updateQuantity(index, 1)}
-                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-green-500"
-                              >
-                                <Plus size={16} />
-                              </button>
-                            </div>
+                            {item.isScale ? (
+                              // Item de balança: mostra o peso
+                              <div className="flex items-center gap-2 bg-[#E2F898]/40 border border-[#E2F898] rounded-full px-3 py-1.5">
+                                <Scale size={13} className="text-gray-600" />
+                                <span className="text-xs font-black text-gray-700">
+                                  {item.obs?.[0] || "0.000 kg"}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm">
+                                <button
+                                  onClick={() => updateQuantity(index, -1)}
+                                  className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500"
+                                >
+                                  <Minus size={16} />
+                                </button>
+                                <span className="w-8 text-center font-bold text-sm">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  onClick={() => updateQuantity(index, 1)}
+                                  className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-green-500"
+                                >
+                                  <Plus size={16} />
+                                </button>
+                              </div>
+                            )}
 
-                            {item.obs && item.obs.length > 0 && (
+                            {!item.isScale && item.obs && item.obs.length > 0 && (
                               <div className="text-xs font-bold text-gray-400 line-clamp-1 flex-1 text-right ml-2">
                                 + {item.obs.join(", ")}
                               </div>

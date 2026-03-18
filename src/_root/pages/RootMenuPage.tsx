@@ -1,14 +1,4 @@
-import {
-  ChevronLeft,
-  Coffee,
-  IceCream,
-  Pizza,
-  Plus,
-  SearchX,
-  Utensils,
-  Wine,
-  X,
-} from "lucide-react";
+import { ChevronLeft, Plus, SearchX, Utensils, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   productsService,
@@ -23,35 +13,8 @@ import EditMenuItemForm from "../components/menu/RootEditMenuItemForm";
 import { PdvMenu } from "../components/pdv/PdvMenu";
 import LoadingComponent from "../../components/shared/LoadingComponent";
 import RootMenuItemOptions from "../components/menu/RootMenuItemOptions";
+import { MENU_CATEGORY_META } from "../constants/menuCategories";
 
-const MENU_ICONS: Record<string, any> = {
-  Entradas: {
-    icon: <Utensils size={18} />,
-    color:
-      "text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400",
-  },
-  Principais: {
-    icon: <Pizza size={18} />,
-    color: "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
-  },
-  Sobremesas: {
-    icon: <IceCream size={18} />,
-    color: "text-pink-600 bg-pink-100 dark:bg-pink-900/30 dark:text-pink-400",
-  },
-  Bebidas: {
-    icon: <Wine size={18} />,
-    color: "text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400",
-  },
-  Cafés: {
-    icon: <Coffee size={18} />,
-    color:
-      "text-orange-600 bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400",
-  },
-  Adicionais: {
-    icon: <Plus size={18} />,
-    color: "text-zinc-600 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400",
-  },
-};
 
 const RootMenuPage = () => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -168,8 +131,8 @@ const RootMenuPage = () => {
           setSelectedCategory={setSelectedCategory}
           categories={categories.map((cat) => ({
             id: cat,
-            label: cat,
-            icon: MENU_ICONS[cat]?.icon || <Utensils size={18} />,
+            label: cat === "Balanca" ? "Balança" : cat,
+            icon: MENU_CATEGORY_META[cat]?.icon || <Utensils size={18} />,
           }))}
           products={products}
           isLoading={isLoading}

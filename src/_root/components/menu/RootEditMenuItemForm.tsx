@@ -19,14 +19,8 @@ import type { MenuItemFormType } from "../../schemas/menuItemSchema";
 import { menuItemSchema } from "../../schemas/menuItemSchema";
 import type { MenuItem } from "../../schemas/menuItemSchema";
 import { productsService } from "../../../services/products/products.service";
+import { MENU_CATEGORY_NAMES } from "../../constants/menuCategories";
 
-const defaultCategories = [
-  "Entradas",
-  "Principais",
-  "Sobremesas",
-  "Bebidas",
-  "Adicionais",
-];
 
 interface EditMenuItemFormProps {
   item: MenuItem;
@@ -247,7 +241,7 @@ export default function RootEditMenuItemForm({
               <option value="" disabled hidden>
                 Selecione uma categoria...
               </option>
-              {defaultCategories.map((cat) => (
+              {MENU_CATEGORY_NAMES.map((cat) => (
                 <option key={cat}>{cat}</option>
               ))}
             </select>

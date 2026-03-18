@@ -9,7 +9,7 @@ export interface ProductsResponse {
   price: number;
   status: boolean;
   createdAt?: string;
-  updatedAt?: string; 
+  updatedAt?: string;
 }
 
 export interface CreateProductRequest {
@@ -58,13 +58,28 @@ export const productsService = {
 
     return data;
   },
-  async createProduct(product: CreateProductRequest): Promise<ProductsResponse> {
+
+  async getProductsActive(): Promise<ProductsResponse[]> {
+    const { data } = await api.get<ProductsResponse[]>("/products/active");
+
+    return data;
+  },
+
+  async createProduct(
+    product: CreateProductRequest,
+  ): Promise<ProductsResponse> {
     const { data } = await api.post<ProductsResponse>("/products", product);
     return data;
   },
 
-  async updateProduct(id: string, product: Partial<ProductsResponse>): Promise<ProductsResponse> {
-    const { data } = await api.patch<ProductsResponse>(`/products/${id}`, product);
+  async updateProduct(
+    id: string,
+    product: Partial<ProductsResponse>,
+  ): Promise<ProductsResponse> {
+    const { data } = await api.patch<ProductsResponse>(
+      `/products/${id}`,
+      product,
+    );
     return data;
   },
 
@@ -72,9 +87,21 @@ export const productsService = {
     await api.delete(`/products/${id}`);
   },
 
-  async getProductStats(id: string): Promise<ProductsStatsResponse[]> {
-    const { data } = await api.get<ProductsStatsResponse[]>(`/products/${id}/sales`);
+  async updateProductStatus(
+    id: string,
+    status: boolean,
+  ): Promise<ProductsResponse> {
+    const { data } = await api.patch<ProductsResponse>(
+      `/products/${id}/status`,
+      { status },
+    );
     return data;
   },
 
+  async getProductStats(id: string): Promise<ProductsStatsResponse[]> {
+    const { data } = await api.get<ProductsStatsResponse[]>(
+      `/products/${id}/sales`,
+    );
+    return data;
+  },
 };

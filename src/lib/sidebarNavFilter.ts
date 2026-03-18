@@ -1,13 +1,13 @@
 import {
-  LayoutDashboard,
-  ShoppingCart,
-  Store,
-  BookUser,
   BadgeDollarSign,
+  BookUser,
+  LayoutDashboard,
   PackageSearch,
+  ShoppingCart,
   Truck,
   Users,
-  type LucideIcon,
+  Utensils,
+  type LucideIcon
 } from "lucide-react";
 import type { User } from "../contexts/DataContext";
 
@@ -32,9 +32,9 @@ export const sidebarNavigation: NavItem[] = [
     roles: ["ADMIN", "OWNER", "MANAGER", "CASHIER", "WAITER"],
   },
   {
-    name: "Cardápio",
+    name: "Menu",
     url: "/root/menu",
-    icon: Store,
+    icon: Utensils,
     roles: ["ADMIN", "OWNER", "MANAGER", "CASHIER", "WAITER"],
   },
   {

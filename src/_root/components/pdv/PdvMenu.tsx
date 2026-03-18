@@ -48,7 +48,7 @@ export function PdvMenu({
     const fetchProducts = async () => {
       try {
         setInternalLoading(true);
-        const data = await productsService.getProducts();
+        const data = await productsService.getProductsActive();
         setInternalProducts(data);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);

@@ -1,5 +1,5 @@
 "use client";
-import { CompassIcon, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import * as React from "react";
 
 import { NavProjects } from "../components/nav-projects";
@@ -18,7 +18,6 @@ import { NavSecondary } from "./nav-secondary";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data } = useAuthenticatedUser();
-  console.log("e os dados", data);
 
   const filteredNav = sidebarNavigation.filter((item) =>
     item.roles.includes(data?.role),
@@ -32,7 +31,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
     business: {
       name: "CristhERP",
-      logo: CompassIcon,
+      logo: "/logo.svg",
     },
     projects: filteredNav,
     navSecondary: [

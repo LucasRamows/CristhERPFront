@@ -1,11 +1,9 @@
-import { Edit2, Trash2, X, Loader2 } from "lucide-react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { Edit2, Loader2, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { toast } from "sonner";
-import type { ProductsResponse } from "../../../services/products/products.service";
-import { productsService } from "../../../services/products/products.service";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
+import type { ProductsResponse } from "../../../services/products/products.service";
+import { productsService } from "../../../services/products/products.service";
 
 interface RootMenuItemOptionsProps {
   item: ProductsResponse;
@@ -32,7 +32,6 @@ export default function RootMenuItemOptions({
 }: RootMenuItemOptionsProps) {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [salesData, setSalesData] = useState<any[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
@@ -75,21 +74,6 @@ export default function RootMenuItemOptions({
       console.error(error);
     } finally {
       setIsUpdatingStatus(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      setIsDeleting(true);
-      await productsService.deleteProduct(item.id);
-      toast.success("Produto excluído com sucesso");
-      onDeleteClick();
-    } catch (error) {
-      toast.error("Erro ao excluir produto");
-      console.error(error);
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
     }
   };
 
@@ -266,10 +250,9 @@ export default function RootMenuItemOptions({
             </AlertDialogCancel>
             <AlertDialogAction
               className="bg-red-600 hover:bg-red-700 text-white rounded-full font-bold px-8 shadow-lg shadow-red-200"
-              disabled={isDeleting}
-              onClick={handleDelete}
+              onClick={onDeleteClick}
             >
-              {isDeleting ? "Excluindo..." : "Excluir"}
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

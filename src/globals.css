@@ -107,7 +107,7 @@
   --card-foreground: oklch(0.2 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0 0);
-  --primary: oklch(0.94 0.14 133); /* #DCFF79 - Verde Limão Limpo Reference */
+  --primary: oklch(0.94 0.14 133);
   --primary-foreground: oklch(0.2 0 0);
   --secondary: oklch(0.96 0 0); /* Fundo claro para badges */
   --secondary-foreground: oklch(0.2 0 0);

@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
 import { formatMoney, removeMask } from "../../../lib/utils";
@@ -14,14 +15,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
-import type { MenuItemFormType } from "../../forms/schemas/menuItemSchema";
-import { menuItemSchema } from "../../forms/schemas/menuItemSchema";
-import type { MenuItem } from "../../forms/schemas/menuItemSchema";
+import type { MenuItemFormType } from "../../schemas/menuItemSchema";
+import { menuItemSchema } from "../../schemas/menuItemSchema";
+import type { MenuItem } from "../../schemas/menuItemSchema";
 import { productsService } from "../../../services/products/products.service";
 
 const defaultCategories = [
   "Entradas",
-  "Pratos Principais",
+  "Principais",
   "Sobremesas",
   "Bebidas",
   "Adicionais",
@@ -41,6 +42,7 @@ export default function RootEditMenuItemForm({
   const [send, setSend] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
 
   const form = useForm<MenuItemFormType>({
     resolver: zodResolver(menuItemSchema),
@@ -143,45 +145,87 @@ export default function RootEditMenuItemForm({
         name="status"
         control={form.control}
         render={({ field }) => (
-          <div className="space-y-2 mt-2 p-5 bg-zinc-50 dark:bg-zinc-900/30 rounded-[24px] border border-zinc-200/50 dark:border-zinc-800/50">
-            <label className="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-wider block mb-3">
-              Status do Produto
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  checked={field.value === true}
-                  onChange={() => field.onChange(true)}
-                  className="w-5 h-5 text-[#DCFF79] border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-[#DCFF79] focus:ring-offset-zinc-50 dark:focus:ring-offset-zinc-950 accent-[#111827] dark:accent-[#DCFF79]"
-                />
-                <span
-                  className={`font-semibold text-sm transition-colors ${
+          <div className="space-y-4 p-5 bg-zinc-50/50 dark:bg-zinc-900/20 rounded-[28px] border border-zinc-200/50 dark:border-zinc-800/50 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                Status do Produto
+              </label>
+              <div
+                className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${
+                  field.value
+                    ? "bg-[#DCFF79]/10 text-[#DCFF79]"
+                    : "bg-red-500/10 text-red-500"
+                }`}
+              >
+                {field.value ? "Disponível no Menu" : "Item Indisponível"}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                disabled={isStatusLoading}
+                onClick={async () => {
+                  if (field.value === true) return;
+                  try {
+                    setIsStatusLoading(true);
+                    await productsService.updateProductStatus(item.id, true);
+                    field.onChange(true);
+                    toast.success("Produto ativado com sucesso!");
+                  } catch (err) {
+                    console.error("Erro ao atualizar status:", err);
+                    toast.error("Falha ao atualizar o status.");
+                  } finally {
+                    setIsStatusLoading(false);
+                  }
+                }}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 disabled:opacity-60 disabled:cursor-not-allowed ${
+                  field.value === true
+                    ? "bg-[#DCFF79] border-[#DCFF79] text-zinc-900 shadow-[0_8px_20px_-4px_rgba(220,255,121,0.4)] scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                     field.value === true
-                      ? "text-zinc-900 dark:text-zinc-100"
-                      : "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
+                      ? "bg-zinc-900 animate-pulse shadow-[0_0_8px_rgba(0,0,0,0.2)]"
+                      : "bg-zinc-200 dark:bg-zinc-800"
                   }`}
-                >
-                  Ativo
-                </span>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  checked={field.value === false}
-                  onChange={() => field.onChange(false)}
-                  className="w-5 h-5 text-[#DCFF79] border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 focus:ring-[#DCFF79] focus:ring-offset-zinc-50 dark:focus:ring-offset-zinc-950 accent-[#111827] dark:accent-[#DCFF79]"
                 />
-                <span
-                  className={`font-semibold text-sm transition-colors ${
+                {isStatusLoading && field.value !== true ? "..." : "ATIVO"}
+              </button>
+              <button
+                type="button"
+                disabled={isStatusLoading}
+                onClick={async () => {
+                  if (field.value === false) return;
+                  try {
+                    setIsStatusLoading(true);
+                    await productsService.updateProductStatus(item.id, false);
+                    field.onChange(false);
+                    toast.success("Produto desativado.");
+                  } catch (err) {
+                    console.error("Erro ao atualizar status:", err);
+                    toast.error("Falha ao atualizar o status.");
+                  } finally {
+                    setIsStatusLoading(false);
+                  }
+                }}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 disabled:opacity-60 disabled:cursor-not-allowed ${
+                  field.value === false
+                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xl scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
                     field.value === false
-                      ? "text-zinc-900 dark:text-zinc-100"
-                      : "text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-zinc-300"
+                      ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]"
+                      : "bg-zinc-200 dark:bg-zinc-800"
                   }`}
-                >
-                  Inativo
-                </span>
-              </label>
+                />
+                {isStatusLoading && field.value !== false ? "..." : "INATIVO"}
+              </button>
             </div>
           </div>
         )}

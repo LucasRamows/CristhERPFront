@@ -24,5 +24,6 @@ export const authService = {
 
   async logout() {
     await api.post<LoginResponse>("/auth/logout");
+    window.location.href = "/login";
   },
 };

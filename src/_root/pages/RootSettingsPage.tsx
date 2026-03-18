@@ -1,193 +1,153 @@
-import { Bell, CheckCircle2, MessageSquare, Moon, Sun } from "lucide-react";
-import React, { useState } from "react";
-import { useTheme } from "../../contexts/ThemeContext";
-import apiBack from "../../services/api";
+import { Bell, LayoutGrid } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "../../components/ui/button";
+import { useAuthenticatedUser } from "../../contexts/DataContext";
+import { restaurantService } from "../../services/restaurant/restaurant.service";
 
 const RootSettingsPage: React.FC = () => {
+  const { data: user, refreshData } = useAuthenticatedUser();
+
   const [receiveNotifications, setReceiveNotifications] = useState(true);
-  const [themeToggle, setThemeToggle] = useState(true);
-  const { toggleTheme } = useTheme();
-  const [whatsappStatus, setWhatsappStatus] = useState<
-    "disconnected" | "connecting" | "connected"
-  >("disconnected");
-  const [, setQrCodeData] = useState<string | null>(null);
-  const token = localStorage.getItem("token");
+  const [totalTables, setTotalTables] = useState(
+    user?.restaurant?.totalTables || 10,
+  );
+  const [isSaving, setIsSaving] = useState(false);
 
-  // const checkStatus = async () => {
-  //   try {
-  //     const { data } = await apiBack.get("/private/status", {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
+  // Sincronizar estado local se o usuário mudar externamente
+  useEffect(() => {
+    if (user?.restaurant?.totalTables) {
+      setTotalTables(user.restaurant.totalTables);
+    }
+  }, [user?.restaurant?.totalTables]);
 
-  //     if (data.connected) {
-  //       setWhatsappStatus("connected");
-  //       setQrCodeData(null);
-  //     } else if (data.qrCode) {
-  //       setQrCodeData(data.qrCode);
-  //     }
-  //   } catch (e) {
-  //     console.error("Erro ao verificar status do WhatsApp");
-  //   }
-  // };
-
-  const handleDisconnect = async () => {
-    // Confirmação para evitar cliques acidentais
-    if (!confirm("Tem certeza que deseja desconectar o WhatsApp?")) return;
+  const handleSaveTables = async () => {
+    if (!user?.restaurant?.id) return;
 
     try {
-
-      await apiBack.post(
-        "/private/logout",
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      setWhatsappStatus("disconnected");
-      setQrCodeData(null);
-
-      alert("WhatsApp desconectado com sucesso.");
+      setIsSaving(true);
+      await restaurantService.updateRestaurant(user.restaurant.id, {
+        totalTables,
+      });
+      await refreshData();
+      toast.success("Quantidade de mesas atualizada!");
     } catch (error) {
-      console.error("Erro ao desconectar:", error);
-      alert("Falha ao desconectar o dispositivo.");
+      console.error("Erro ao salvar mesas:", error);
+      toast.error("Erro ao atualizar mesas. Tente novamente.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-poppins p-6">
-      <main className="max-w-2xl mx-auto space-y-12 pt-10">
-        {/* Header */}
-        <div>
-          <h1 className="text-5xl font-neusharp italic uppercase tracking-tighter leading-none">
-            Configurações
-          </h1>
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2">
-            Preferências do Sistema
-          </p>
+    <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
+      {/* Tema */}
+      {/* <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <Palette size={20} className="text-primary" />
+          <h3 className="uppercase text-lg">Tema</h3>
         </div>
 
-        {/* Tema */}
-        <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <Bell size={20} className="text-primary" />
-            <h3 className="font-neusharp italic uppercase text-lg">Tema</h3>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-              Mudar tema
-            </span>
-            <button
-              onClick={() => {
-                setThemeToggle((prev) => !prev);
-                toggleTheme();
-              }}
-              className={`w-14 h-8 rounded-full transition-all relative flex items-center ${
-                themeToggle ? "bg-primary" : "bg-secondary"
-              }`}
-            >
-              {/* Ícone */}
-              <div
-                className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all flex items-center justify-center ${
-                  themeToggle ? "left-7" : "left-1"
-                }`}
-              >
-                {themeToggle ? (
-                  <Moon size={14} className="text-gray-800" />
-                ) : (
-                  <Sun size={14} className="text-yellow-500" />
-                )}
-              </div>
-            </button>
-          </div>
-        </section>
-
-        {/* Notificações */}
-        <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
-          <div className="flex items-center gap-3">
-            <Bell size={20} className="text-primary" />
-            <h3 className="font-neusharp italic uppercase text-lg">
-              Alertas e Avisos
-            </h3>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-              Receber avisos no sistema
-            </span>
-            <button
-              onClick={() => setReceiveNotifications(!receiveNotifications)}
-              className={`w-14 h-8 rounded-full transition-all relative ${
-                receiveNotifications ? "bg-primary" : "bg-secondary"
-              }`}
-            >
-              <div
-                className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${
-                  receiveNotifications ? "left-7" : "left-1"
-                }`}
-              />
-            </button>
-          </div>
-        </section>
-        {/* WhatsApp Connection */}
-        <section className="bg-card border border-border rounded-[2rem] p-8 space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MessageSquare size={20} className="text-primary" />
-              <h3 className="font-neusharp italic uppercase text-lg">
-                WhatsApp Business
-              </h3>
-            </div>
-
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+            Mudar tema
+          </span>
+          <button
+            onClick={() => {
+              setThemeToggle((prev) => !prev);
+              toggleTheme();
+            }}
+            className={`w-14 h-8 rounded-full transition-all relative flex items-center ${
+              themeToggle ? "bg-primary" : "bg-secondary"
+            }`}
+          >
             <div
-              className={`px-4 py-1 rounded-full text-[10px] font-black uppercase flex items-center gap-2 ${
-                whatsappStatus === "connected"
-                  ? "bg-green-500/20 text-green-500"
-                  : "bg-secondary text-muted-foreground"
+              className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all flex items-center justify-center ${
+                themeToggle ? "left-7" : "left-1"
               }`}
             >
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  whatsappStatus === "connected"
-                    ? "bg-green-500 animate-pulse"
-                    : "bg-muted-foreground"
-                }`}
-              />
-              {whatsappStatus === "connected" ? "Conectado" : "Desconectado"}
+              {themeToggle ? (
+                <Moon size={14} className="text-gray-800" />
+              ) : (
+                <Sun size={14} className="text-yellow-500" />
+              )}
             </div>
+          </button>
+        </div>
+      </section> */}
+
+      {/* Notificações */}
+      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <Bell size={20} className="text-primary" />
+          <h3 className="uppercase text-lg">Alertas e Avisos</h3>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+            Receber avisos no sistema
+          </span>
+          <button
+            onClick={() => setReceiveNotifications(!receiveNotifications)}
+            className={`w-14 h-8 rounded-full transition-all relative ${
+              receiveNotifications ? "bg-primary" : "bg-secondary"
+            }`}
+          >
+            <div
+              className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${
+                receiveNotifications ? "left-7" : "left-1"
+              }`}
+            />
+          </button>
+        </div>
+      </section>
+
+      {/* Quantidade de Mesas */}
+      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
+        <div className="flex items-center gap-3">
+          <LayoutGrid size={20} className="text-primary" />
+          <h3 className="uppercase text-lg">Ambiente e Mesas</h3>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest leading-none">
+              Quantidade de Mesas
+            </span>
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+              Total de mesas disponíveis no salão e PDV
+            </p>
           </div>
 
-          {whatsappStatus !== "connected" ? (
-            <div className="space-y-6">
-              <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                Conecte seu WhatsApp para receber lembretes de treinos e tarefas
-                diretamente no seu celular.
-              </p>
+          <div className="flex items-center gap-4 bg-secondary/10 p-2 rounded-2xl border border-border/50">
+            <button
+              onClick={() => setTotalTables(Math.max(1, totalTables - 1))}
+              className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center font-bold hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
+            >
+              -
+            </button>
+            <div className="w-12 text-center text-xl font-bold">
+              {totalTables}
             </div>
-          ) : (
-            <div className="bg-secondary/30 rounded-2xl p-6 border border-primary/10 flex items-center gap-4">
-              <div className="bg-primary/20 p-3 rounded-xl text-primary">
-                <CheckCircle2 size={24} />
-              </div>
-              <div>
-                <p className="text-sm font-bold uppercase tracking-tight">
-                  Dispositivo Pareado
-                </p>
-                <p className="text-[10px] text-muted-foreground font-medium">
-                  Você está pronto para receber notificações automáticas.
-                </p>
-              </div>
-              <button
-                onClick={() => handleDisconnect()}
-                className="ml-auto text-[10px] font-black text-destructive uppercase tracking-widest hover:underline"
-              >
-                Desconectar
-              </button>
-            </div>
-          )}
-        </section>
-      </main>
+            <button
+              onClick={() => setTotalTables(totalTables + 1)}
+              className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center font-bold hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <Button
+            onClick={handleSaveTables}
+            disabled={isSaving || totalTables === user?.restaurant?.totalTables}
+            className="w-full rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest h-14 hover:opacity-90 shadow-lg shadow-primary/20 transition-all border-none"
+          >
+            {isSaving ? "Atualizando..." : "Salvar Alteração"}
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };

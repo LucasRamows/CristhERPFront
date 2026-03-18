@@ -14,6 +14,7 @@ import {
   productsService,
   type ProductsResponse,
 } from "../../services/products/products.service";
+import { toast } from "sonner";
 
 import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "../../components/ui/sheet";
@@ -29,7 +30,7 @@ const MENU_ICONS: Record<string, any> = {
     color:
       "text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400",
   },
-  "Pratos Principais": {
+  Principais: {
     icon: <Pizza size={18} />,
     color: "text-red-600 bg-red-100 dark:bg-red-900/30 dark:text-red-400",
   },
@@ -69,17 +70,26 @@ const RootMenuPage = () => {
       setIsLoading(true);
       const data = await productsService.getProducts();
       setProducts(data);
-
-      const distinctCategories = Array.from(
-        new Set(data.map((item) => item.category)),
-      );
-      setCategories(["TODOS", ...distinctCategories]);
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
+      toast.error("Erro ao carregar cardápio.");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const distinctCategories = Array.from(
+      new Set(products.map((item) => item.category)),
+    ).filter(Boolean);
+    const newCategories = ["TODOS", ...distinctCategories];
+    setCategories(newCategories);
+
+    // Se a categoria selecionada sumiu (foi deletada ou renomeada), volta para TODOS
+    if (!newCategories.includes(selectedCategory)) {
+      setSelectedCategory("TODOS");
+    }
+  }, [products]);
 
   useEffect(() => {
     fetchProducts();
@@ -90,8 +100,10 @@ const RootMenuPage = () => {
       const resp = await productsService.createProduct(values);
       setProducts((prev) => [...prev, resp]);
       setIsPanelOpen(false);
+      toast.success("Produto adicionado ao cardápio!");
     } catch (error) {
       console.error("Erro ao criar produto:", error);
+      toast.error("Não foi possível criar o produto.");
     }
   };
 
@@ -102,20 +114,26 @@ const RootMenuPage = () => {
       setProducts((prev) => prev.map((m) => (m.id === resp.id ? resp : m)));
       setIsPanelEditOpen(false);
       setItemSelected(null);
+      toast.success("Produto atualizado com sucesso!");
     } catch (error) {
       console.error("Erro ao atualizar produto:", error);
+      toast.error("Falha na atualização do produto.");
     }
   };
 
   const handleDelete = async () => {
     if (!itemSelected) return;
+    if (!confirm(`Deseja realmente excluir "${itemSelected.name}"?`)) return;
+
     try {
       await productsService.deleteProduct(itemSelected.id);
       setProducts((prev) => prev.filter((m) => m.id !== itemSelected.id));
       setIsPanelEditOpen(false);
       setItemSelected(null);
+      toast.success("Produto removido do cardápio.");
     } catch (error) {
       console.error("Erro ao excluir produto:", error);
+      toast.error("Não foi possível excluir o produto.");
     }
   };
 
@@ -130,29 +148,17 @@ const RootMenuPage = () => {
   }
 
   return (
-    <div className="flex gap-6 flex-col w-full bg-background overflow-hidden select-none p-4 md:p-6 h-full">
-      {/* Header com Categorias e Ações */}
-      {/* Header com Ações */}
-      <div className="flex flex-col md:flex-row w-full gap-4 justify-between items-start md:items-center bg-white dark:bg-[#1a1b1e] p-6 rounded-[28px] border border-zinc-100 dark:border-zinc-800/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.1)]">
-        <div className="flex flex-col">
-          <h1 className="text-2xl font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tighter">
-            Gestão de Cardápio
-          </h1>
-          <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.2em] mt-1">
-            Controle total dos seus produtos
-          </p>
-        </div>
-
-        <div className="flex gap-2 w-full md:w-fit group">
-          <Button
-            onClick={() => {
-              setItemSelected(null);
-              setIsPanelOpen(true);
-            }}
-          >
-            <Plus size={22} strokeWidth={3} />
-          </Button>
-        </div>
+    <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
+      <div className="flex justify-end">
+        <Button
+          onClick={() => {
+            setItemSelected(null);
+            setIsPanelOpen(true);
+          }}
+        >
+          <Plus size={22} strokeWidth={3} />
+          Adicionar Item
+        </Button>
       </div>
 
       {/* Grid de Produtos via PdvMenu */}

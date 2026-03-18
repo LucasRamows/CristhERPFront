@@ -23,6 +23,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "../components/ui/sidebar";
+import { Button } from "./ui/button";
+import { authService } from "../services/user/auth.service";
 
 export function NavUser({
   user,
@@ -84,16 +86,17 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.href = "/";
+              <Button
+                variant="destructive"
+                onClick={async () => {
+                  await authService.logout();
+                  
                 }}
                 className="w-full"
               >
                 <LogOut />
                 Sair
-              </button>
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

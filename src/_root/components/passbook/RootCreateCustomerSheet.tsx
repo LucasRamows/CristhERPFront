@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetTitle } from "../../../components/ui/sheet";
 import {
   customerSchema,
   type CustomerFormType,
-} from "../../forms/schemas/customerSchema";
+} from "../../schemas/customerSchema";
 
 import {
   costomersService,

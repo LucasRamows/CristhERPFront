@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
 import { formatMoney } from "../../../lib/utils";
-import type { MenuItemFormType } from "../../forms/schemas/menuItemSchema";
-import { menuItemSchema } from "../../forms/schemas/menuItemSchema";
+import type { MenuItemFormType } from "../../schemas/menuItemSchema";
+import { menuItemSchema } from "../../schemas/menuItemSchema";
 
 const defaultCategories = [
   "Entradas",
-  "Pratos Principais",
+  "Principais",
   "Sobremesas",
   "Bebidas",
   "Adicionais",

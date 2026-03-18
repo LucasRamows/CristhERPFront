@@ -1,5 +1,4 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GalleryVerticalEnd } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
@@ -40,7 +39,7 @@ export function SignInForm({
         password: values.password,
       });
 
-      refreshData();
+      await refreshData();
       navigate("/root/dashboard");
     } catch (err: any) {
       console.error("Erro no login:", err.response?.data || err.message);
@@ -54,14 +53,10 @@ export function SignInForm({
         <FieldGroup>
           <div className="flex flex-col items-center gap-2 text-center">
             <div className="flex size-8 items-center justify-center rounded-md">
-              <GalleryVerticalEnd className="size-6" />
+              <img src="/logo.svg" alt="Logo"/>
             </div>
 
-            <h1 className="text-xl font-bold">Bem-vindo(a)  Cristh ERP</h1>
-            {/* 
-            <FieldDescription>
-              Ainda não tem conta? <a href="#">Cadastre-se</a>
-            </FieldDescription> */}
+            <h1 className="text-xl font-bold">Bem-vindo(a) ao Cristh ERP</h1>
           </div>
 
           {/* EMAIL */}

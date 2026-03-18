@@ -74,7 +74,6 @@ const RootDashboardPage = () => {
 
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
-      {/* MÉTRICAS PRINCIPAIS (Kpis de Restaurante) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Faturamento Hoje"

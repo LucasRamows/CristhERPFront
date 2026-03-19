@@ -81,7 +81,6 @@ export function PdvTicketSheet({
               </div>
               <button
                 onClick={() => {
-                  console.log("1 aa");
                   onCloseEntity();
                   handleOpenChange(false);
                 }}

@@ -88,7 +88,7 @@ export function PdvMenu({
       )}
 
       {/* Categorias */}
-      <div className="flex gap-3 mb-6 overflow-x-auto pb-2 custom-scrollbar shrink-0 no-scrollbar">
+      <div className="flex flex-wrap gap-3 mb-6 overflow-x-auto pb-2 custom-scrollbar shrink-0 no-scrollbar">
         {visibleCategories.map((cat) => (
           <button
             key={cat.id}

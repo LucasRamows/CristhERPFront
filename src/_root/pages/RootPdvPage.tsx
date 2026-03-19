@@ -24,6 +24,7 @@ import type {
   SelectedProductForObs,
 } from "../../services/products/products.service";
 import { MENU_CATEGORIES_FOR_PDV } from "../constants/menuCategories";
+import { calcPdvTotals } from "../../services/math/pdv.service";
 
 export interface PdvEntity {
   id: string;
@@ -37,7 +38,6 @@ export interface PdvEntity {
   items?: any[];
   openedAt?: string;
 }
-
 
 export default function RootPdvPage() {
   const { data: user } = useAuthenticatedUser();
@@ -177,7 +177,6 @@ export default function RootPdvPage() {
       setOrders((prev) => ({ ...prev, [caixaVirtual.id]: [] }));
     }
     setActiveView("menu");
-    // setCartMobileOpen(true);
   };
 
   const handleNewComanda = () => {
@@ -206,14 +205,13 @@ export default function RootPdvPage() {
     setCartMobileOpen(false);
   };
 
-  const handleOrderSelect = (orderId: string) => {
-    const order = openOrders.find((o) => o.id === orderId);
+  const handleOrderSelect = (order: any) => {
     if (!order) return;
 
     const entity: PdvEntity = {
       id: order.id,
       orderId: order.id,
-      orderType: order.orderType as any,
+      orderType: order.orderType,
       reference: order.reference,
       name:
         order.orderType === "TABLE"
@@ -227,7 +225,7 @@ export default function RootPdvPage() {
           : order.orderType === "CARD"
           ? `Cmd ${order.reference}`
           : "Balcão",
-      status: order.status.toLowerCase() as any,
+      status: order.status,
       total: parseFloat(order.total),
       items: order.items,
       openedAt: order.openedAt,
@@ -239,6 +237,7 @@ export default function RootPdvPage() {
 
   // --- UTILITÁRIOS DE ESTADO ---
   const updateOrderInState = (updatedOrder: OpenOrdersResponse) => {
+    console.log("updateOrderInState", updatedOrder);
     setOpenOrders((prev) => {
       const exists = prev.find((o) => o.id === updatedOrder.id);
       if (exists) {
@@ -253,8 +252,8 @@ export default function RootPdvPage() {
   };
 
   const addToCart = (product: ProductsResponse) => {
-    // Produtos da balança vão para o modal de peso
-    if (product.category?.toLowerCase() === "balanca") {
+    // Produtos de balança são identificados pelo campo unit === "kg"
+    if (product.unit.toUpperCase() === "KG") {
       setSelectedWeightProduct({
         ...product,
         obs: [],
@@ -292,9 +291,10 @@ export default function RootPdvPage() {
           items: [createOrderItem],
         });
       } else {
-        response = await ordersService.addItemsToOrder(activeEntity.orderId, {
-          items: [createOrderItem],
-        });
+        response = await ordersService.addItemsToOrder(
+          activeEntity.orderId,
+          createOrderItem,
+        );
       }
       setOpenOrders((prev) => {
         const otherOrders = prev.filter((o) => o.id !== response.id);
@@ -327,9 +327,10 @@ export default function RootPdvPage() {
     setIsSyncing(true);
     if (item.isFromBackend) {
       try {
-        const newQtd = item.quantity + delta;
+        const newQtd = Number(item.quantity) + delta;
         if (newQtd <= 0) {
-          await ordersService.removeItem(item.id);
+          // uniqueId é o ID do item do pedido (não o productId)
+          await ordersService.removeItem(item.uniqueId);
           await fetchOrders();
         } else {
           const response = await ordersService.updateItems(
@@ -344,26 +345,39 @@ export default function RootPdvPage() {
         setIsSyncing(false);
       }
     } else {
-      // Lógica local mantida...
-      // Lógica para itens que ainda estão apenas no estado local (não sincronizados)
-      setOrders((prev) => {
-        const backendItemsCount = (activeEntity.items || []).length;
-        const localIndex = index - backendItemsCount;
-        const currentLocalOrders = prev[activeEntity.id] || [];
+      // Itens locais ainda não sincronizados com o backend
+      try {
+        setOrders((prev) => {
+          // Os itens do backend vêm de openOrders (fonte de verdade),
+          // então calculamos o índice local subtraindo os do backend
+          const sourceOrder = openOrders.find(
+            (o) => o.id === activeEntity.orderId,
+          );
+          const backendItemsCount = (
+            sourceOrder?.items ||
+            activeEntity.items ||
+            []
+          ).length;
+          const localIndex = index - backendItemsCount;
+          const currentLocalOrders = prev[activeEntity.id] || [];
 
-        if (localIndex < 0 || !currentLocalOrders[localIndex]) return prev;
+          if (localIndex < 0 || !currentLocalOrders[localIndex]) return prev;
 
-        const newOrders = [...currentLocalOrders];
-        const localItem = newOrders[localIndex];
-        const newQtd = localItem.quantity + delta;
+          const newOrders = [...currentLocalOrders];
+          const localItem = newOrders[localIndex];
+          const newQtd = localItem.quantity + delta;
 
-        if (newQtd <= 0) {
-          newOrders.splice(localIndex, 1);
-        } else {
-          newOrders[localIndex] = { ...localItem, quantity: newQtd };
-        }
-        return { ...prev, [activeEntity.id]: newOrders };
-      });
+          if (newQtd <= 0) {
+            newOrders.splice(localIndex, 1);
+          } else {
+            newOrders[localIndex] = { ...localItem, quantity: newQtd };
+          }
+          return { ...prev, [activeEntity.id]: newOrders };
+        });
+      } finally {
+        // Garante que o syncing seja resetado também para itens locais
+        setIsSyncing(false);
+      }
     }
   };
 
@@ -402,15 +416,23 @@ export default function RootPdvPage() {
     }
   };
 
-  // --- CÁLCULOS DO CARRINHO ATUAL ---
+  // --- CARRINHO ATUAL ---
+  // FONTE DE VERDADE: lê os itens diretamente de `openOrders` quando há orderId.
+  // Assim, qualquer `updateOrderInState` reflete imediatamente aqui,
+  // sem depender de um useEffect intermediário que pode não ser acionado.
   const cart = useMemo(() => {
     if (!activeEntity) return [];
 
     const isScaleNote = (notes: string[]) =>
       notes?.some((n) => /kg$/i.test(n.trim()));
 
-    // Itens que vêm do Backend (já confirmados)
-    const backendItems = (activeEntity.items || []).map((item: any) => ({
+    // Busca os itens direto de openOrders (atualizado por updateOrderInState)
+    // Se não há orderId (ex: nova mesa ainda vazia), cai para activeEntity.items
+    const sourceItems = activeEntity.orderId
+      ? openOrders.find((o) => o.id === activeEntity.orderId)?.items ?? []
+      : activeEntity.items ?? [];
+
+    const backendItems = sourceItems.map((item: any) => ({
       id: item.productId,
       uniqueId: item.id,
       name: item.product?.name || "Produto",
@@ -421,24 +443,20 @@ export default function RootPdvPage() {
       isScale: isScaleNote(item.notes || []),
     }));
 
-    // Itens Locais (ainda não sincronizados - agora estamos sincronizando imediato, mas mantemos por segurança)
+    // Itens locais ainda não confirmados no backend
     const localItems = (orders[activeEntity.id] || []).map((item: any) => ({
       ...item,
       isScale: isScaleNote(item.obs || []),
     }));
 
     return [...backendItems, ...localItems];
-  }, [activeEntity, orders]);
+  }, [activeEntity, orders, openOrders]);
 
-  const subtotal = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0,
+  const { subtotal, serviceTax, total } = calcPdvTotals(
+    cart,
+    includeService,
+    activeEntity?.orderType === "COUNTER",
   );
-  const serviceTax =
-    includeService && activeEntity?.orderType !== "COUNTER"
-      ? subtotal * 0.1
-      : 0;
-  const total = subtotal + serviceTax;
 
   // --- RENDERIZADORES AUXILIARES ---
   const getStatusClasses = (status: string) => {

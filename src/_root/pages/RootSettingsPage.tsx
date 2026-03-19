@@ -1,18 +1,24 @@
-import { Bell, LayoutGrid } from "lucide-react";
+import { Bell, LayoutGrid, Moon, Palette, Sun } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "../../components/ui/button";
 import { useAuthenticatedUser } from "../../contexts/DataContext";
 import { restaurantService } from "../../services/restaurant/restaurant.service";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const RootSettingsPage: React.FC = () => {
   const { data: user, refreshData } = useAuthenticatedUser();
-
+  const [themeToggle, setThemeToggle] = useState(false);
   const [receiveNotifications, setReceiveNotifications] = useState(true);
   const [totalTables, setTotalTables] = useState(
     user?.restaurant?.totalTables || 10,
   );
   const [isSaving, setIsSaving] = useState(false);
+  const { toggleTheme } = useTheme();
+  const onThemeChange = () => {
+    setThemeToggle((prev) => !prev);
+    toggleTheme();
+  };
 
   // Sincronizar estado local se o usuário mudar externamente
   useEffect(() => {
@@ -42,7 +48,7 @@ const RootSettingsPage: React.FC = () => {
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
       {/* Tema */}
-      {/* <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
+      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
         <div className="flex items-center gap-3">
           <Palette size={20} className="text-primary" />
           <h3 className="uppercase text-lg">Tema</h3>
@@ -53,10 +59,7 @@ const RootSettingsPage: React.FC = () => {
             Mudar tema
           </span>
           <button
-            onClick={() => {
-              setThemeToggle((prev) => !prev);
-              toggleTheme();
-            }}
+            onClick={onThemeChange}
             className={`w-14 h-8 rounded-full transition-all relative flex items-center ${
               themeToggle ? "bg-primary" : "bg-secondary"
             }`}
@@ -74,7 +77,7 @@ const RootSettingsPage: React.FC = () => {
             </div>
           </button>
         </div>
-      </section> */}
+      </section>
 
       {/* Notificações */}
       <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">

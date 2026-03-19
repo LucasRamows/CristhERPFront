@@ -9,12 +9,10 @@ type ThemeContextType = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<"light" | "dark">("light"); // ⬅️ tema inicial claro
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
     const stored = localStorage.getItem("ThemeColor") as "light" | "dark" | null;
-
-    // Se houver tema salvo, usa ele; caso contrário, mantém "light"
     const initialTheme = stored || "light";
     setTheme(initialTheme);
 

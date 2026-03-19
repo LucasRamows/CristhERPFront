@@ -60,9 +60,7 @@ export interface CreateOrderRequest {
   items: CreateOrderItem[];
 }
 
-export interface AddItemToOrderRequest {
-  items: CreateOrderItem[];
-}
+
 
 export interface ItemUpdate {
   id: string;
@@ -110,7 +108,7 @@ export const ordersService = {
 
   async addItemsToOrder(
     orderId: string,
-    payload: AddItemToOrderRequest,
+    payload: CreateOrderItem,
   ): Promise<OpenOrdersResponse> {
     const { data } = await api.post<OpenOrdersResponse>(
       `/orders/${orderId}/items`,
@@ -127,7 +125,7 @@ export const ordersService = {
   },
 
   async removeItem(itemId: string): Promise<void> {
-    await api.delete(`/orders/item/${itemId}`);
+    await api.delete(`/orders/${itemId}/items`);
   },
 
   async deleteOrder(orderId: string): Promise<void> {

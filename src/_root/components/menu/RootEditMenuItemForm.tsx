@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Trash2 } from "lucide-react";
+import { ChevronDown, Package, Trash2, Weight } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Controller, useForm } from "react-hook-form";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
-import { formatMoney, removeMask } from "../../../lib/utils";
+import { formatMoney } from "../../../lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,8 +42,11 @@ export default function RootEditMenuItemForm({
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
       name: item.name,
-      price: item.price,
+      // Number() garante que price é sempre number no estado do form,
+      // mesmo que o backend devolva "25.90" como string no runtime.
+      price: Number(item.price),
       category: item.category,
+      unit: (item as any).unit ?? "un",
       description: item.description || "",
       code: item.code || "",
       status: item.status,
@@ -51,10 +54,13 @@ export default function RootEditMenuItemForm({
   });
 
   const handleSubmit = async (values: MenuItemFormType) => {
+    console.log(values);
     try {
       setIsLoading(true);
-      // Chamada real para a API
-      const updatedItem = await productsService.updateProduct(item.id, values);
+      const updatedItem = await productsService.updateProduct(item.id, {
+        ...values,
+        price: Number(values.price),
+      });
 
       onSubmit(updatedItem as MenuItem);
 
@@ -118,8 +124,9 @@ export default function RootEditMenuItemForm({
               <input
                 value={displayPrice}
                 onChange={(e) => {
-                  const numeric = Number(removeMask(e.target.value)) / 100;
-                  field.onChange(numeric);
+                  const onlyDigits = e.target.value.replace(/\D/g, "");
+                  const asNumber = Number(onlyDigits) / 100;
+                  field.onChange(asNumber);
                 }}
                 placeholder="R$ 0,00"
                 className="w-full h-14 px-5 bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/50 dark:border-zinc-800/80 rounded-[20px] focus:bg-white dark:focus:bg-zinc-900 focus:border-[#DCFF79] focus:ring-1 focus:ring-[#DCFF79] outline-none transition-all font-semibold text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 placeholder:font-medium"
@@ -132,6 +139,50 @@ export default function RootEditMenuItemForm({
             </div>
           );
         }}
+      />
+
+      {/* Unidade de Medida */}
+      <Controller
+        name="unit"
+        control={form.control}
+        render={({ field }) => (
+          <div className="space-y-4 p-5 bg-zinc-50/50 dark:bg-zinc-900/20 rounded-[28px] border border-zinc-200/50 dark:border-zinc-800/50">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                Unidade de Medida
+              </label>
+              <div className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                {field.value === "KG" ? "Venda por Peso" : "Venda por Unidade"}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => field.onChange("un")}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 ${
+                  field.value === "UN"
+                    ? "bg-[#DCFF79] border-[#DCFF79] text-zinc-900 shadow-[0_8px_20px_-4px_rgba(220,255,121,0.4)] scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <Package size={16} />
+                UNIDADE (UN)
+              </button>
+              <button
+                type="button"
+                onClick={() => field.onChange("KG")}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 ${
+                  field.value === "KG"
+                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xl scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <Weight size={16} />
+                PESO (KG)
+              </button>
+            </div>
+          </div>
+        )}
       />
 
       {/* Status */}

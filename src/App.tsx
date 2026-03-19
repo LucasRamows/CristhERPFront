@@ -24,7 +24,7 @@ import RootPassbookPage from "./_root/pages/RootPassBookPage";
 
 const App = () => {
   return (
-    <ThemeProvider>
+    <ThemeProvider >
       <AlertProvider>
         <DataProvider>
           <Routes>

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Package, Weight } from "lucide-react";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
@@ -7,10 +7,11 @@ import { formatMoney } from "../../../lib/utils";
 import type { MenuItemFormType } from "../../schemas/menuItemSchema";
 import { menuItemSchema } from "../../schemas/menuItemSchema";
 import { MENU_CATEGORY_NAMES } from "../../constants/menuCategories";
-
+import { productsService } from "../../../services/products/products.service";
 
 export default function RootCreateMenuItemForm({ onSubmit }: any) {
   const [send, setSend] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<MenuItemFormType>({
     resolver: zodResolver(menuItemSchema),
@@ -18,6 +19,7 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
       name: "",
       price: 0,
       category: "",
+      unit: "UN",
       description: "",
       code: "",
       status: true,
@@ -26,14 +28,9 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
 
   const handleSubmit = async (values: MenuItemFormType) => {
     try {
-      // Mocking API call
-      const newItem = {
-        ...values,
-        id: Math.random().toString(36).substring(7),
-      };
-
+      setIsLoading(true);
+      const newItem = await productsService.createProduct(values);
       onSubmit(newItem);
-
       setSend(true);
       form.reset();
       setTimeout(() => {
@@ -41,6 +38,8 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
       }, 3000);
     } catch (err: any) {
       console.error("Erro:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -108,6 +107,50 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
             </div>
           );
         }}
+      />
+
+      {/* Unidade de Medida */}
+      <Controller
+        name="unit"
+        control={form.control}
+        render={({ field }) => (
+          <div className="space-y-4 p-5 bg-zinc-50/50 dark:bg-zinc-900/20 rounded-[28px] border border-zinc-200/50 dark:border-zinc-800/50">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest">
+                Unidade de Medida
+              </label>
+              <div className="px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                {field.value === "KG" ? "Venda por Peso" : "Venda por Unidade"}
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => field.onChange("UN")}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 ${
+                  field.value === "UN"
+                    ? "bg-[#DCFF79] border-[#DCFF79] text-zinc-900 shadow-[0_8px_20px_-4px_rgba(220,255,121,0.4)] scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <Package size={16} />
+                UNIDADE (UN)
+              </button>
+              <button
+                type="button"
+                onClick={() => field.onChange("KG")}
+                className={`flex-1 h-14 rounded-[20px] text-[11px] font-black transition-all duration-300 flex items-center justify-center gap-3 border-2 ${
+                  field.value === "KG"
+                    ? "bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100 shadow-xl scale-[1.02]"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-400 dark:text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-700"
+                }`}
+              >
+                <Weight size={16} />
+                PESO (KG)
+              </button>
+            </div>
+          </div>
+        )}
       />
 
       {/* Categoria */}
@@ -194,9 +237,10 @@ export default function RootCreateMenuItemForm({ onSubmit }: any) {
       <div className="pt-6">
         <button
           type="submit"
-          className="w-full h-[52px] bg-[#1a1b1e] dark:bg-white text-white dark:text-zinc-900 rounded-full font-bold text-sm tracking-wide hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+          disabled={isLoading}
+          className="w-full h-[52px] bg-[#1a1b1e] dark:bg-white text-white dark:text-zinc-900 rounded-full font-bold text-sm tracking-wide hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Salvar Item
+          {isLoading ? "SALVANDO..." : "Salvar Item"}
         </button>
       </div>
     </form>

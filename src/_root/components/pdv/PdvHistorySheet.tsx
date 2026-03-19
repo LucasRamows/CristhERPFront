@@ -14,7 +14,7 @@ import { ordersService } from "../../../services/orders/orders.service";
 
 interface PdvHistorySheetProps {
   orders: OpenOrdersResponse[];
-  onOrderSelect: (orderId: string) => void;
+  onOrderSelect: (order: OpenOrdersResponse) => void;
   onRefresh: () => Promise<void>;
 }
 
@@ -47,8 +47,8 @@ export function PdvHistorySheet({
 
   const unpaidOrders = orders.filter(
     (o) =>
-      o.status.toLowerCase() !== "paid" &&
-      o.status.toLowerCase() !== "canceled",
+      o.status?.toLowerCase() !== "paid" &&
+      o.status?.toLowerCase() !== "canceled",
   );
 
   return (
@@ -160,8 +160,8 @@ export function PdvHistorySheet({
                         variant="secondary"
                         className="flex-1 rounded-xl font-bold gap-2 bg-[#E2F898] text-gray-900 hover:bg-[#d4e98a]"
                         onClick={() => {
-                          onOrderSelect(order.id);
                           setIsOpen(false);
+                          onOrderSelect(order);
                         }}
                       >
                         <Pencil size={16} />

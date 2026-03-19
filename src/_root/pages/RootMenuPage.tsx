@@ -60,8 +60,7 @@ const RootMenuPage = () => {
 
   const handleCreateSubmit = async (values: any) => {
     try {
-      const resp = await productsService.createProduct(values);
-      setProducts((prev) => [...prev, resp]);
+      setProducts((prev) => [...prev, values]);
       setIsPanelOpen(false);
       toast.success("Produto adicionado ao cardápio!");
     } catch (error) {

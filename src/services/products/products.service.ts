@@ -6,6 +6,7 @@ export interface ProductsResponse {
   name: string;
   description: string;
   category: string;
+  unit: "UN" | "KG";
   price: number;
   status: boolean;
   createdAt?: string;
@@ -17,6 +18,7 @@ export interface CreateProductRequest {
   name: string;
   description: string;
   category: string;
+  unit: "UN" | "KG";
   price: number;
   status: boolean;
 }

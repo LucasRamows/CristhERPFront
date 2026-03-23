@@ -24,7 +24,7 @@ import RootPassbookPage from "./_root/pages/RootPassBookPage";
 
 const App = () => {
   return (
-    <ThemeProvider >
+    <ThemeProvider>
       <AlertProvider>
         <DataProvider>
           <Routes>
@@ -36,16 +36,15 @@ const App = () => {
               <Route path="/root" element={<RootLayout />}>
                 <Route path="dashboard" element={<RootDashboardPage />} />
                 <Route path="menu" element={<RootMenuPage />} />
+                <Route path="inventory" element={<RootInventoryPage />} />
+                <Route path="supplier" element={<RootSuppliersPage />} />
                 <Route element={<RequireAuth minRole="MANAGER" />}>
-                  <Route path="inventory" element={<RootInventoryPage />} />
-
                   <Route element={<RequireAuth minRole="OWNER" />}>
                     <Route
                       path="financial"
                       element={<FinancialManagementPage />}
                     />
                     <Route path="staff" element={<RootStaffPage />} />
-                    <Route path="supplier" element={<RootSuppliersPage />} />
                   </Route>
                 </Route>
                 <Route path="passbook" element={<RootPassbookPage />} />

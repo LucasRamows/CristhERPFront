@@ -211,6 +211,8 @@ export default function RootPassBookPage() {
         <PdvPaymentModal
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
+          subtotal={0}
+          serviceTax={0}
           total={activeClient.saldoDevedor}
           mode="payment_only"
           hideFiado

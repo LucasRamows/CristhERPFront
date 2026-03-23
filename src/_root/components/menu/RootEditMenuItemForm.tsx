@@ -1,10 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ChevronDown, Package, Trash2, Weight } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { ChevronDown, Package, Plus, ShoppingBasket, Trash2, Weight } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { SearhListPicker } from "../../../components/shared/SearhListPicker";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
-import { formatMoney } from "../../../lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,11 +15,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
-import type { MenuItemFormType } from "../../schemas/menuItemSchema";
-import { menuItemSchema } from "../../schemas/menuItemSchema";
-import type { MenuItem } from "../../schemas/menuItemSchema";
+import { formatMoney } from "../../../lib/utils";
+import {
+  inventoryService,
+  type IngredientResponse,
+} from "../../../services/inventory/inventory.service";
 import { productsService } from "../../../services/products/products.service";
 import { MENU_CATEGORY_NAMES } from "../../constants/menuCategories";
+import type { MenuItem, MenuItemFormType } from "../../schemas/menuItemSchema";
+import { menuItemSchema } from "../../schemas/menuItemSchema";
 
 
 interface EditMenuItemFormProps {
@@ -37,30 +41,86 @@ export default function RootEditMenuItemForm({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isStatusLoading, setIsStatusLoading] = useState(false);
+  const [ingredientsRepo, setIngredientsRepo] = useState<IngredientResponse[]>([]);
 
   const form = useForm<MenuItemFormType>({
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
       name: item.name,
-      // Number() garante que price é sempre number no estado do form,
-      // mesmo que o backend devolva "25.90" como string no runtime.
       price: Number(item.price),
       category: item.category,
       unit: (item as any).unit ?? "un",
       description: item.description || "",
       code: item.code || "",
       status: item.status,
+      ingredients: (item as any).productRecipes?.map((recipe: any) => ({
+        ingredientId: recipe.ingredientId,
+        quantity: Number(recipe.quantity),
+        name: recipe.ingredient?.name || "",
+        unit: recipe.ingredient?.unit || "",
+      })) || [],
     },
   });
 
+  const ingredientsField = form.watch("ingredients") || [];
+
+  useEffect(() => {
+    const fetchIngs = async () => {
+      try {
+        const res = await inventoryService.getIngredients();
+        setIngredientsRepo(res);
+      } catch (err) {
+        console.error("Erro ao buscar insumos", err);
+      }
+    };
+    fetchIngs();
+  }, []);
+
+  const handleAddIngredient = (ingredient: IngredientResponse) => {
+    const exists = ingredientsField.find((i) => i.ingredientId === ingredient.id);
+    if (exists) return; // Ja adicionado
+
+    const updated = [
+      ...ingredientsField,
+      {
+        ingredientId: ingredient.id,
+        quantity: 0,
+        name: ingredient.name,
+        unit: ingredient.unit,
+      },
+    ];
+    form.setValue("ingredients", updated);
+  };
+
+  const handleRemoveIngredient = (id: string) => {
+    const updated = ingredientsField.filter((i) => i.ingredientId !== id);
+    form.setValue("ingredients", updated);
+  };
+
+  const handleUpdateQuantity = (id: string, qty: number) => {
+    const updated = ingredientsField.map((i) =>
+      i.ingredientId === id ? { ...i, quantity: qty } : i
+    );
+    form.setValue("ingredients", updated);
+  };
+
   const handleSubmit = async (values: MenuItemFormType) => {
-    console.log(values);
+    console.log("Valores do formulário antes de limpar:", values);
     try {
       setIsLoading(true);
-      const updatedItem = await productsService.updateProduct(item.id, {
-        ...values,
-        price: Number(values.price),
-      });
+
+      // Criamos um payload seguro, apenas com os campos que devem ser atualizados.
+      // E removemos campos como `id`, `restaurantId`, etc, caso estejam presentes no objeto values.
+      const payload: any = { ...values };
+      delete payload.id;
+      delete payload.restaurantId;
+      delete payload.restaurant_id;
+      delete payload.createdAt;
+      delete payload.updatedAt;
+      
+      payload.price = Number(payload.price);
+
+      const updatedItem = await productsService.updateProduct(item.id, payload);
 
       onSubmit(updatedItem as MenuItem);
 
@@ -332,6 +392,83 @@ export default function RootEditMenuItemForm({
           </div>
         )}
       />
+
+      {/* Ficha Técnica (Insumos) */}
+      <div className="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800/50">
+        <div>
+          <h3 className="text-[11px] font-black text-zinc-800 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2 mb-1">
+            <ShoppingBasket size={14} className="text-[#DCFF79]" /> Ficha Técnica / Receita
+          </h3>
+          <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider mb-3">
+            Vincule insumos para baixar estoque na venda
+          </p>
+        </div>
+        
+        <div className="relative z-50">
+          <SearhListPicker
+            items={ingredientsRepo}
+            onSelect={(item) => handleAddIngredient(item)}
+            placeholder="Buscar insumo por nome..."
+            searchKeys={["name"]}
+            limit={5}
+            renderItem={(item) => (
+              <div className="flex items-center gap-3 py-1 text-left">
+                <div className="w-8 h-8 flex-shrink-0 bg-[#DCFF79]/10 rounded-xl flex items-center justify-center text-[#DCFF79] group-hover:bg-[#DCFF79] group-hover:text-zinc-900 transition-colors">
+                  <Plus size={16} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate">
+                    {item.name}
+                  </span>
+                  <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-wider">
+                    {item.unit}
+                  </span>
+                </div>
+              </div>
+            )}
+          />
+        </div>
+
+        <div className="space-y-2 mt-3 relative z-40">
+          {ingredientsField.length === 0 ? (
+            <div className="p-4 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl flex items-center justify-center text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
+              Nenhum insumo vinculado
+            </div>
+          ) : (
+            ingredientsField.map((ing) => (
+              <div
+                key={ing.ingredientId}
+                className="flex items-center justify-between p-3 bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-100 dark:border-zinc-800 rounded-2xl gap-3"
+              >
+                <div className="flex-1 min-w-0 flex flex-col">
+                  <span className="font-bold text-xs text-zinc-800 dark:text-zinc-200 truncate">
+                    {ing.name}
+                  </span>
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider">
+                    {ing.unit}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <input
+                    type="number"
+                    value={ing.quantity || ""}
+                    onChange={(e) => handleUpdateQuantity(ing.ingredientId, Number(e.target.value))}
+                    placeholder="0.00"
+                    className="w-20 bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl px-2 py-1.5 text-xs font-bold text-center focus:outline-none focus:border-[#DCFF79]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveIngredient(ing.ingredientId)}
+                    className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors shrink-0"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {/* Descrição */}
       <Controller

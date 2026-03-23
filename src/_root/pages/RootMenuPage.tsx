@@ -142,7 +142,7 @@ const RootMenuPage = () => {
           }}
         />
         {filteredItems.length === 0 && !isLoading && (
-          <div className="col-span-full bg-white dark:bg-zinc-900/50 rounded-[40px] border-2 border-dashed border-zinc-200 dark:border-zinc-800 p-20 text-center flex flex-col items-center justify-center">
+          <div className="col-span-full bg-card rounded-[40px] border-2 border-dashed border-zinc-200 dark:border-zinc-800 p-20 text-center flex flex-col items-center justify-center">
             <div className="bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center w-24 h-24 rounded-full mb-8 text-zinc-300 dark:text-zinc-600">
               <SearchX size={48} />
             </div>

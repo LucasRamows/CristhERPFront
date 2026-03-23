@@ -1,11 +1,13 @@
+import { formatDistanceToNow } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
-  Badge,
   ChevronRight,
-  Clock,
   DollarSign,
   ShoppingBag,
-  Utensils,
+  Utensils
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Area,
   AreaChart,
@@ -15,19 +17,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Card } from "../../components/ui/card";
-import { useEffect, useState } from "react";
 import LoadingComponent from "../../components/shared/LoadingComponent";
+import { Card } from "../../components/ui/card";
+import { useAuthenticatedUser } from "../../contexts/DataContext";
+import { formatMoney } from "../../lib/utils";
+import {
+  DashboardcalcFaturamentoHoje,
+  DashboardcalcOccupancyPercentage,
+  DashboardcalcTicketMedio,
+} from "../../services/math/dashboard.service";
+import type { OpenOrdersResponse } from "../../services/orders/orders.service";
 import {
   ordersService,
   type OrdersHistorySalesResponse,
 } from "../../services/orders/orders.service";
-import { formatMoney } from "../../lib/utils";
-import { useAuthenticatedUser } from "../../contexts/DataContext";
-import type { OpenOrdersResponse } from "../../services/orders/orders.service";
-import { useNavigate } from "react-router-dom";
+import { DashboardOrderItem } from "../components/dashboard/DashboardOrderItem";
+import { DashboardStatCard } from "../components/dashboard/DashboardStatCard";
 
 const RootDashboardPage = () => {
   const { data: user } = useAuthenticatedUser();
@@ -60,9 +65,6 @@ const RootDashboardPage = () => {
   const occupiedTables = openOrders.filter(
     (o) => o.orderType === "TABLE",
   ).length;
-  const totalTables = user?.restaurant?.totalTables || 10;
-  const occupancyPercentage =
-    totalTables > 0 ? Math.round((occupiedTables / totalTables) * 100) : 0;
 
   if (isLoading) {
     return (
@@ -75,38 +77,25 @@ const RootDashboardPage = () => {
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
+        <DashboardStatCard
           title="Faturamento Hoje"
-          value={formatMoney(
-            ordersHistorySales?.find(
-              (s) => s.date === new Date().toISOString().split("T")[0],
-            )?.faturamento || 0,
-          )}
+          value={formatMoney(DashboardcalcFaturamentoHoje(ordersHistorySales))}
           icon={<DollarSign size={20} />}
           color="emerald"
         />
 
-        <StatCard
+        <DashboardStatCard
           title="Ticket Médio"
-          value={formatMoney(
-            (() => {
-              const totalFaturamento = ordersHistorySales.reduce(
-                (acc, s) => acc + s.faturamento,
-                0,
-              );
-              const totalVendas = ordersHistorySales.reduce(
-                (acc, s) => acc + s.vendas,
-                0,
-              );
-              return totalVendas > 0 ? totalFaturamento / totalVendas : 0;
-            })(),
-          )}
+          value={formatMoney(DashboardcalcTicketMedio(ordersHistorySales))}
           icon={<ShoppingBag size={20} />}
           color="blue"
         />
-        <StatCard
+        <DashboardStatCard
           title="Ocupação Atual"
-          value={`${occupancyPercentage}%`}
+          value={`${DashboardcalcOccupancyPercentage(
+            occupiedTables,
+            user?.restaurant?.totalTables || 1,
+          )}%`}
           trend={`${occupiedTables} mesas`}
           icon={<Utensils size={20} />}
           color="amber"
@@ -118,18 +107,18 @@ const RootDashboardPage = () => {
         <Card className="lg:col-span-2 p-6">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-bold text-zinc-800">
+              <h3 className="text-lg font-bold text-primary">
                 Fluxo de Pedidos
               </h3>
-              <p className="text-xs text-zinc-400 font-medium uppercase tracking-widest">
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest">
                 Salão vs Delivery
               </p>
             </div>
             <div className="flex gap-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-zinc-600">
+              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                 <div className="w-3 h-3 rounded-full bg-emerald-500" /> Delivery
               </div>
-              <div className="flex items-center gap-2 text-xs font-bold text-zinc-600">
+              <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground">
                 <div className="w-3 h-3 rounded-full bg-zinc-300" /> Salão
               </div>
             </div>
@@ -152,7 +141,7 @@ const RootDashboardPage = () => {
                 />
 
                 <XAxis
-                  dataKey="date" // Mantém date pois seu JSON envia "date"
+                  dataKey="date"
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: "#A1A1AA" }}
@@ -201,11 +190,12 @@ const RootDashboardPage = () => {
         </Card>
 
         {/* FEED DE ATIVIDADE / ALERTAS COZINHA */}
-        <Card className="p-6">
-          <h3 className="text-lg font-bold text-zinc-800 mb-6">
-            Status da Cozinha
+        <Card className="p-6 bg-card shadow-sm">
+          <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+            <span className="w-2 h-5 bg-[#DCFF79] rounded-full block" />
+            <span className="text-primary uppercase">Status da Cozinha</span>
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-4 h-full overflow-y-auto">
             {openOrders
               .sort(
                 (a, b) =>
@@ -220,10 +210,7 @@ const RootDashboardPage = () => {
 
                 const timeElapsed = formatDistanceToNow(
                   new Date(order.openedAt),
-                  {
-                    addSuffix: false,
-                    locale: ptBR,
-                  },
+                  { addSuffix: false, locale: ptBR },
                 );
 
                 const getStatusLabel = (status: string) => {
@@ -240,7 +227,7 @@ const RootDashboardPage = () => {
                 };
 
                 return (
-                  <OrderItem
+                  <DashboardOrderItem
                     key={order.id}
                     table={
                       order.orderType === "TABLE"
@@ -254,70 +241,32 @@ const RootDashboardPage = () => {
                     time={timeElapsed}
                     status={getStatusLabel(order.status)}
                     items={itemsSummary || "Nenhum item"}
+                    // Garante que o conteúdo interno siga o padrão UPPERCASE
+                    className="uppercase"
                   />
                 );
               })}
 
+            {/* Ajuste no estado vazio para usar cores do seu tema */}
             {openOrders.length === 0 && (
-              <div className="text-center py-8 text-zinc-400 font-medium">
-                Nenhum pedido em andamento
+              <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
+                <p className="text-muted-foreground font-medium uppercase text-sm">
+                  Nenhum pedido em andamento
+                </p>
               </div>
             )}
           </div>
           <button
             onClick={() => navigate("/root/sales")}
-            className="w-full mt-8 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
+            className="w-full mt-8 py-3 bg-[#DCFF79] hover:bg-[#c9ea6b] text-primary rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 uppercase shadow-sm"
           >
-            Ver Monitor de Pedidos <ChevronRight size={16} />
+            Ver Monitor de Pedidos{" "}
+            <ChevronRight size={18} className="text-primary" />
           </button>
         </Card>
       </div>
     </div>
   );
 };
-
-// --- COMPONENTES ATOMICOS ---
-
-const StatCard = ({ title, value, trend, icon, color }: any) => {
-  const colors: any = {
-    emerald: "bg-emerald-50 text-emerald-600",
-    blue: "bg-blue-50 text-blue-600",
-    amber: "bg-amber-50 text-amber-600",
-    purple: "bg-purple-50 text-purple-600",
-  };
-
-  return (
-    <Card className="p-6 border-none shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-2xl ${colors[color]}`}>{icon}</div>
-        <div>
-          <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-            {title}
-          </p>
-          <div className="flex items-baseline gap-2">
-            <h4 className="text-2xl font-black text-zinc-900">{value}</h4>
-            <span className="text-[10px] font-black text-emerald-500">
-              {trend}
-            </span>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-};
-
-const OrderItem = ({ table, time, status, items }: any) => (
-  <div className="group p-4 rounded-2xl border border-zinc-100 hover:border-zinc-200 transition-all cursor-pointer">
-    <div className="flex justify-between items-start mb-2">
-      <span className="font-black text-zinc-800">{table}</span>
-      <Badge>{status}</Badge>
-    </div>
-    <p className="text-xs text-zinc-500 font-medium mb-3">{items}</p>
-    <div className="flex items-center gap-1.5 text-zinc-400">
-      <Clock size={12} />
-      <span className="text-[10px] font-bold uppercase">{time} em espera</span>
-    </div>
-  </div>
-);
 
 export default RootDashboardPage;

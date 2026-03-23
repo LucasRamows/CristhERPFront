@@ -13,6 +13,17 @@ export interface ProductsResponse {
   updatedAt?: string;
 }
 
+export interface ProductsUpload {
+  code: string;
+  name: string;
+  description: string;
+  category: string;
+  unit: "UN" | "KG";
+  price: number;
+  status: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 export interface CreateProductRequest {
   code: string;
   name: string;

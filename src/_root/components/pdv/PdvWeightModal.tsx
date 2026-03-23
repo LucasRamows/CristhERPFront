@@ -31,7 +31,6 @@ export function PdvWeightModal({
 
   const handleConfirm = () => {
     if (!product || !isValid) return;
-    // Envia com: quantity = 1, price = totalPrice (já calculado), weight salvo em obs
     onConfirm({
       ...product,
       price: totalPrice,

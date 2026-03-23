@@ -67,7 +67,7 @@ export const SearhListPicker = <T extends { id: string | number }>({
   }, [items, searchTerm, searchKeys, limit]);
 
   return (
-    <div className="flex flex-col gap-2 w-full max-w-2xl">
+    <div className="flex flex-col gap-2 w-full">
       {/* Barra de Busca */}
       <div className="relative group">
         <Search
@@ -122,4 +122,21 @@ export const SearhListPicker = <T extends { id: string | number }>({
     </div>
   );
 };
+
+export const StatusLegend = () => (
+  <div className="flex w-fit flex-nowrap items-center gap-3 text-xs md:text-sm font-bold text-primary">
+    <div className="flex items-center gap-1.5">
+      <div className="w-3 h-3 rounded-full bg-white border-2 border-gray-300"></div>
+      Livre
+    </div>
+    <div className="flex items-center gap-1.5">
+      <div className="w-3 h-3 rounded-full bg-[#E2F898]"></div>
+      Ocupada
+    </div>
+    <div className="flex items-center gap-1.5">
+      <div className="w-3 h-3 rounded-full bg-[#FFD1CD]"></div>
+      Ag. Prato
+    </div>
+  </div>
+);
 

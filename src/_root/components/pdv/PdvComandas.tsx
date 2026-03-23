@@ -1,6 +1,6 @@
 import { AlertCircle, Clock, Receipt } from "lucide-react";
-import type { PdvEntity } from "../../pages/RootPdvPage";
 import { formatDate } from "date-fns";
+import type { PdvEntity } from "../../types/PdvEntity";
 
 export interface PdvComandasProps {
   entities: PdvEntity[];

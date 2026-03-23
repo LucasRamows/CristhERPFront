@@ -32,7 +32,7 @@ export const sidebarNavigation: NavItem[] = [
     roles: ["ADMIN", "OWNER", "MANAGER", "CASHIER", "WAITER"],
   },
   {
-    name: "Menu",
+    name: "Cardápio",
     url: "/root/menu",
     icon: Utensils,
     roles: ["ADMIN", "OWNER", "MANAGER", "CASHIER", "WAITER"],
@@ -53,13 +53,13 @@ export const sidebarNavigation: NavItem[] = [
     name: "Estoque",
     url: "/root/inventory",
     icon: PackageSearch,
-    roles: ["ADMIN", "OWNER", "MANAGER"],
+    roles: ["ADMIN", "OWNER", "MANAGER", "CASHIER"],
   },
   {
     name: "Fornecedores",
     url: "/root/supplier",
     icon: Truck,
-    roles: ["ADMIN", "OWNER"],
+    roles: ["ADMIN", "OWNER", "CASHIER"],
   },
   {
     name: "Equipe",

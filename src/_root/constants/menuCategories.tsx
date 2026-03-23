@@ -10,10 +10,6 @@ import {
 } from "lucide-react";
 import { createElement } from "react";
 
-/**
- * Lista de categorias do cardápio — fonte única de verdade.
- * Adicione, remova ou renomeie aqui e todos os componentes se atualizam.
- */
 export const MENU_CATEGORY_NAMES = [
   "Entradas",
   "Principais",
@@ -61,10 +57,7 @@ export const MENU_CATEGORY_META: Record<
   },
 };
 
-/**
- * Lista de categorias no formato usado pelo PdvMenu (com id, label e icon).
- * Inclui a opção "Todos" no início.
- */
+
 export const MENU_CATEGORIES_FOR_PDV = [
   { id: "Todos", label: "Todos", icon: createElement(Grid, { size: 18 }) },
   ...MENU_CATEGORY_NAMES.map((name) => ({

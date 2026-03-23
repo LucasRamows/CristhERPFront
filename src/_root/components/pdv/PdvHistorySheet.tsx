@@ -14,7 +14,7 @@ import { ordersService } from "../../../services/orders/orders.service";
 
 interface PdvHistorySheetProps {
   orders: OpenOrdersResponse[];
-  onOrderSelect: (order: OpenOrdersResponse) => void;
+  onOrderSelect: (order: any) => void;
   onRefresh: () => Promise<void>;
 }
 

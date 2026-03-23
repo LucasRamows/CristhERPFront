@@ -11,3 +11,5 @@ Todo o projeto deve sempre optar por components e principalmente que sejam reuti
 A organização em paginas e subpaginas é indispensavel.
 
 O backend será acessado por requisições apenas.
+
+Sempre use ingles para por nomes nas funções e paginas.

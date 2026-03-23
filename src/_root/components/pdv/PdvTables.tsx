@@ -1,11 +1,11 @@
 import { AlertCircle, Clock, User } from "lucide-react";
-import type { PdvEntity } from "../../pages/RootPdvPage";
 import { formatDate } from "date-fns";
+import type { PdvEntity } from "../../types/PdvEntity";
 
 export interface PdvTablesProps {
   entities: PdvEntity[];
   activeEntityId?: string;
-  onEntityClick: (entity: PdvEntity) => void;
+  onEntityClick: (entity: PdvEntity, view: string) => void;
   getStatusClasses: (status: string) => string;
 }
 
@@ -20,7 +20,7 @@ export function PdvTables({
       {entities.map((table) => (
         <button
           key={table.id}
-          onClick={() => onEntityClick(table)}
+          onClick={() => onEntityClick(table, "tables")}
           className={`relative flex flex-col p-5 rounded-[24px] text-left transition-transform active:scale-95 border-2 h-36 justify-between ${getStatusClasses(
             table.status,
           )} ${activeEntityId === table.id ? "ring-4 ring-black/10" : ""}`}

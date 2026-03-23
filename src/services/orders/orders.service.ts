@@ -87,6 +87,9 @@ export const ordersService = {
     id: string,
     method: string,
     customerId: string,
+    subtotal: number,
+    serviceTax: number,
+    discount: number,
     amount: number,
   ): Promise<CloseOrderResponse> {
     const { data } = await api.patch<CloseOrderResponse>(
@@ -94,6 +97,9 @@ export const ordersService = {
       {
         method,
         customerId,
+        subtotal,
+        serviceTax,
+        discount,
         amount,
       },
     );

@@ -6,7 +6,9 @@ import {
   type ProductsResponse,
 } from "../../../services/products/products.service";
 import { ProductCard } from "../menu/MenuProductCard";
-import type { PdvEntity } from "../../pages/RootPdvPage";
+import type { PdvEntity } from "../../types/PdvEntity";
+import { SearhListPicker } from "../../../components/shared/SearhListPicker";
+import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
 
 export interface PdvMenuCategory {
   id: string;
@@ -20,10 +22,11 @@ export interface PdvMenuProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   categories: PdvMenuCategory[];
-  addToCart?: (product: any) => void;
-  onProductClick?: (product: any) => void;
+  addToCart?: (product: ProductsResponse) => void;
+  onProductClick?: (product: ProductsResponse) => void;
   products?: ProductsResponse[];
   isLoading?: boolean;
+  setAllProducts?: (products: ProductsResponse[]) => void;
 }
 
 export function PdvMenu({
@@ -36,6 +39,7 @@ export function PdvMenu({
   onProductClick,
   products: externalProducts,
   isLoading: externalLoading,
+  setAllProducts,
 }: PdvMenuProps) {
   const [internalProducts, setInternalProducts] = useState<ProductsResponse[]>(
     [],
@@ -50,6 +54,7 @@ export function PdvMenu({
         setInternalLoading(true);
         const data = await productsService.getProductsActive();
         setInternalProducts(data);
+        setAllProducts?.(data);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
       } finally {
@@ -73,19 +78,47 @@ export function PdvMenu({
 
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      {activeEntity && activeEntity.id !== "caixa_balcao" && setActiveView && (
-        <button
-          onClick={() =>
-            setActiveView(
-              activeEntity.orderType === "TABLE" ? "mesas" : "comandas",
-            )
-          }
-          className="mb-6 flex items-center gap-2 text-gray-500 hover:text-gray-900 font-bold w-fit"
-        >
-          <ChevronLeft size={20} /> Voltar para{" "}
-          {activeEntity.orderType === "TABLE" ? "Mesas" : "Comandas"}
-        </button>
-      )}
+      <div className="mb-6">
+        <SearhListPicker
+          items={products}
+          onSelect={(item) => onProductClick?.(item)}
+          placeholder="Buscar produto por nome, código ou categoria..."
+          searchKeys={["name", "code", "category"]}
+          renderItem={(item) => (
+            <div className="flex items-center gap-2 py-1">
+              <Avatar className="h-9 w-9 border border-gray-100 rounded-full flex items-center justify-center bg-gray-50 overflow-hidden">
+                <AvatarFallback className="font-bold text-xs text-primary">
+                  {item.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="font-bold text-sm text-zinc-800">
+                  {item.name}
+                </span>
+                <span className="text-[10px] text-zinc-500 font-medium uppercase">
+                  {item.category} • R$ {Number(item.price).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          )}
+        />
+      </div>
+      {activeEntity &&
+        (activeEntity.orderType === "TABLE" ||
+          activeEntity.orderType === "CARD") &&
+        setActiveView && (
+          <button
+            onClick={() =>
+              setActiveView(
+                activeEntity.orderType === "TABLE" ? "mesas" : "comandas",
+              )
+            }
+            className="mb-6 flex items-center gap-2 text-primary hover:text-primary/80 font-bold w-fit"
+          >
+            <ChevronLeft size={20} /> Voltar para{" "}
+            {activeEntity.orderType === "TABLE" ? "Mesas" : "Comandas"}
+          </button>
+        )}
 
       {/* Categorias */}
       <div className="flex flex-wrap gap-3 mb-6 overflow-x-auto pb-2 custom-scrollbar shrink-0 no-scrollbar">
@@ -129,10 +162,7 @@ export function PdvMenu({
                 }
                 formatMoney={(val) => `R$ ${val.toFixed(2)}`}
                 onClick={(item) => {
-                  console.log("1");
                   if (onProductClick) {
-                    console.log("1.1");
-
                     onProductClick(item);
                   } else if (addToCart) {
                     addToCart(item);

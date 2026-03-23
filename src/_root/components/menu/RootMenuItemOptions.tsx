@@ -108,7 +108,7 @@ export default function RootMenuItemOptions({
               </h4>
             </div>
             {!isLoadingStats && (
-              <div className="bg-[#DCFF79] px-3 py-1 rounded-full text-[10px] font-black text-zinc-900 uppercase">
+              <div className="bg-decoration px-3 py-1 rounded-full text-[10px] font-black text-zinc-900 uppercase">
                 Em Tempo Real
               </div>
             )}

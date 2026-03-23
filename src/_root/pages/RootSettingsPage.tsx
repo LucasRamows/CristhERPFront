@@ -28,13 +28,9 @@ const RootSettingsPage: React.FC = () => {
   }, [user?.restaurant?.totalTables]);
 
   const handleSaveTables = async () => {
-    if (!user?.restaurant?.id) return;
-
     try {
       setIsSaving(true);
-      await restaurantService.updateRestaurant(user.restaurant.id, {
-        totalTables,
-      });
+      await restaurantService.updateTables(totalTables);
       await refreshData();
       toast.success("Quantidade de mesas atualizada!");
     } catch (error) {

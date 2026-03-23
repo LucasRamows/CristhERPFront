@@ -1,18 +1,27 @@
-import { CheckCircle, Grid, Minus, Plus, Scale, ShoppingCart, X } from "lucide-react";
+import {
+  CheckCircle,
+  Grid,
+  Minus,
+  Plus,
+  Scale,
+  ShoppingCart,
+  X,
+} from "lucide-react";
 import LoadingComponent from "../../../components/shared/LoadingComponent";
 import { Sheet, SheetContent, SheetTitle } from "../../../components/ui/sheet";
-import type { PdvEntity } from "../../pages/RootPdvPage";
+import type { PdvEntity } from "../../types/PdvEntity";
 
 export interface CartItem {
   id: string;
-  uniqueId: number;
+  uniqueId: string | number;
   name: string;
   price: number;
   quantity: number;
   obs?: string[];
   category?: string;
   code?: string;
-  isScale?: boolean; // produto de balança
+  isScale?: boolean;
+  isFromBackend?: boolean;
 }
 
 export interface PdvTicketSheetProps {
@@ -22,7 +31,11 @@ export interface PdvTicketSheetProps {
   addClick: (entity: any) => void;
   cart: CartItem[];
   onCloseEntity: () => void;
-  updateQuantity: (index: number, delta: number) => void;
+  updateQuantity: (
+    uniqueId: string,
+    delta: number,
+    isFromBackend: boolean,
+  ) => void;
   includeService: boolean;
   setIncludeService: (include: boolean) => void;
   serviceTax: number;
@@ -30,7 +43,6 @@ export interface PdvTicketSheetProps {
   onSplit: () => void;
   onPayment: () => void;
   isSyncing: boolean;
-  setActiveView: (view: string) => void;
 }
 
 export function PdvTicketSheet({
@@ -48,14 +60,9 @@ export function PdvTicketSheet({
   onSplit,
   onPayment,
   isSyncing,
-  setActiveView,
 }: PdvTicketSheetProps) {
-  const handleOpenChange = (open: any) => {
+  const handleOpenChange = (open: boolean) => {
     onOpenChange(open);
-    if (!open) {
-      console.log("1 aab");
-      setActiveView("menu");
-    }
   };
   return (
     <Sheet open={isOpen} onOpenChange={handleOpenChange}>
@@ -109,7 +116,7 @@ export function PdvTicketSheet({
                 ) : (
                   <div className="flex flex-col gap-3">
                     <>
-                      {cart.map((item, index) => (
+                      {cart.map((item) => (
                         <div
                           key={item.uniqueId}
                           className="p-4 bg-gray-50 rounded-[20px] border border-gray-100"
@@ -136,16 +143,30 @@ export function PdvTicketSheet({
                             ) : (
                               <div className="flex items-center bg-white border border-gray-200 rounded-full shadow-sm">
                                 <button
-                                  onClick={() => updateQuantity(index, -1)}
+                                  onClick={() =>
+                                    updateQuantity(
+                                      String(item.uniqueId),
+                                      -1,
+                                      !!item.isFromBackend,
+                                    )
+                                  }
                                   className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-red-500"
                                 >
                                   <Minus size={16} />
                                 </button>
+
                                 <span className="w-8 text-center font-bold text-sm">
                                   {item.quantity}
                                 </span>
+
                                 <button
-                                  onClick={() => updateQuantity(index, 1)}
+                                  onClick={() =>
+                                    updateQuantity(
+                                      String(item.uniqueId),
+                                      1,
+                                      !!item.isFromBackend,
+                                    )
+                                  }
                                   className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-green-500"
                                 >
                                   <Plus size={16} />
@@ -153,11 +174,13 @@ export function PdvTicketSheet({
                               </div>
                             )}
 
-                            {!item.isScale && item.obs && item.obs.length > 0 && (
-                              <div className="text-xs font-bold text-gray-400 line-clamp-1 flex-1 text-right ml-2">
-                                + {item.obs.join(", ")}
-                              </div>
-                            )}
+                            {!item.isScale &&
+                              item.obs &&
+                              item.obs.length > 0 && (
+                                <div className="text-xs font-bold text-gray-400 line-clamp-1 flex-1 text-right ml-2">
+                                  + {item.obs.join(", ")}
+                                </div>
+                              )}
                           </div>
                         </div>
                       ))}

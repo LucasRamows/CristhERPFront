@@ -8,6 +8,16 @@ export const menuItemSchema = z.object({
   description: z.string(),
   code: z.string(),
   status: z.boolean(),
+  ingredients: z
+    .array(
+      z.object({
+        ingredientId: z.string(),
+        quantity: z.number(),
+        name: z.string().optional(),
+        unit: z.string().optional(),
+      })
+    )
+    .optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

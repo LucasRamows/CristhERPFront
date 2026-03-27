@@ -162,7 +162,7 @@ export default function RootPdvPage() {
       case "open":
         return "bg-[#E2F898] border-[#E2F898] text-gray-900 shadow-sm";
       case "awaiting":
-        return "bg-[#FFD1CD] border-[#FFD1CD] text-gray-900 shadow-sm";
+        return "bg-[#FACC15] border-[#FACC15] text-gray-900 shadow-sm";
       case "closing":
       case "paid":
       case "canceled":

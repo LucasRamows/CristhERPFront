@@ -43,6 +43,20 @@ const RootDashboardPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Estado local para gerenciar a entrega sem alterar o banco
+  const [localDeliveredOrders, setLocalDeliveredOrders] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("@CristhERP:delivered_orders");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("@CristhERP:delivered_orders", JSON.stringify(localDeliveredOrders));
+  }, [localDeliveredOrders]);
+
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -197,6 +211,7 @@ const RootDashboardPage = () => {
           </h3>
           <div className="space-y-4 h-full overflow-y-auto">
             {openOrders
+              .filter((order) => !localDeliveredOrders.includes(order.id))
               .sort(
                 (a, b) =>
                   new Date(b.openedAt).getTime() -
@@ -226,6 +241,15 @@ const RootDashboardPage = () => {
                   }
                 };
 
+                const handleMarkDelivered = () => {
+                  try {
+                    // Atualiza apenas localmente (navegador) para nao inundar o banco
+                    setLocalDeliveredOrders((prev) => [...prev, order.id]);
+                  } catch (err) {
+                    console.error("Erro ao atualizar status:", err);
+                  }
+                };
+
                 return (
                   <DashboardOrderItem
                     key={order.id}
@@ -241,14 +265,14 @@ const RootDashboardPage = () => {
                     time={timeElapsed}
                     status={getStatusLabel(order.status)}
                     items={itemsSummary || "Nenhum item"}
-                    // Garante que o conteúdo interno siga o padrão UPPERCASE
-                    className="uppercase"
+                    onMarkDelivered={handleMarkDelivered}
+                    className="uppercase animate-in fade-in slide-in-from-bottom-2"
                   />
                 );
               })}
 
             {/* Ajuste no estado vazio para usar cores do seu tema */}
-            {openOrders.length === 0 && (
+            {openOrders.filter((o) => !localDeliveredOrders.includes(o.id)).length === 0 && (
               <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
                 <p className="text-muted-foreground font-medium uppercase text-sm">
                   Nenhum pedido em andamento

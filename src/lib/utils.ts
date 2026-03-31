@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { OpenOrdersResponse } from "../services/orders/orders.service";
+import type { PdvEntity, OrderType } from "../_root/types/PdvEntity";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -83,7 +85,13 @@ function formatTime(value: string) {
 
 function isDeepEqual(obj1: any, obj2: any): boolean {
   if (obj1 === obj2) return true;
-  if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) return false;
+  if (
+    typeof obj1 !== "object" ||
+    obj1 === null ||
+    typeof obj2 !== "object" ||
+    obj2 === null
+  )
+    return false;
 
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
@@ -91,10 +99,34 @@ function isDeepEqual(obj1: any, obj2: any): boolean {
   if (keys1.length !== keys2.length) return false;
 
   for (const key of keys1) {
-    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key])) return false;
+    if (!keys2.includes(key) || !isDeepEqual(obj1[key], obj2[key]))
+      return false;
   }
 
   return true;
+}
+
+const mapOrderToPdvEntity = (order: OpenOrdersResponse): PdvEntity => {
+  const isTable = order.orderType === "TABLE";
+  const isCard = order.orderType === "CARD";
+
+  return {
+    ...order,
+    orderType: order.orderType as OrderType,
+    status: order.status.toLowerCase() as any,
+    total: parseFloat(order.total),
+    subtotal: parseFloat(order.subtotal || "0"),
+    discount: parseFloat(order.discount || "0"),
+    serviceTax: parseFloat(order.serviceTax || "0"),
+
+    name: isTable
+      ? `MESA ${order.reference}`
+      : isCard
+      ? `COMANDA ${order.reference}`
+      : `VENDA ${order.reference}`,
+
+    label: isTable ? `MESA ${order.reference}` : `CMD ${order.reference}`,
+  };
 };
 export {
   formatCEP,
@@ -105,4 +137,5 @@ export {
   formatPhone,
   removeMask,
   formatTime,
+  mapOrderToPdvEntity,
 };

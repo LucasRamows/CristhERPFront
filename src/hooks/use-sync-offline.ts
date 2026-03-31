@@ -27,10 +27,7 @@ export const useOfflineSync = (
           orderType: "COUNTER",
           reference: "Balcão",
           operatorId: user.id,
-          total: items.reduce(
-            (acc: number, item: any) => acc + item.price * item.quantity,
-            0,
-          ),
+          sale_date: new Date().toISOString(),
           items: items.map((item: any) => ({
             productId: item.productId,
             quantity: item.quantity,

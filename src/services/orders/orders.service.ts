@@ -2,10 +2,12 @@ import api from "../api";
 
 export interface OpenOrdersResponse {
   id: string;
+  name: string;
   restaurantId: string;
   orderType: string;
   reference: string;
   status: string;
+  sale_date: string;
   subtotal: string;
   serviceTax: string;
   discount: string;
@@ -56,11 +58,9 @@ export interface CreateOrderRequest {
   orderType: string;
   reference: string;
   operatorId: string;
-  total: number;
+  sale_date?: string;
   items: CreateOrderItem[];
 }
-
-
 
 export interface ItemUpdate {
   id: string;
@@ -86,21 +86,15 @@ export const ordersService = {
   async closeOrder(
     id: string,
     method: string,
-    customerId: string,
-    subtotal: number,
-    serviceTax: number,
-    discount: number,
-    amount: number,
+    discountAmount: number,
+    customerId?: string,
   ): Promise<CloseOrderResponse> {
     const { data } = await api.patch<CloseOrderResponse>(
       `/orders/${id}/close`,
       {
         method,
+        discountAmount,
         customerId,
-        subtotal,
-        serviceTax,
-        discount,
-        amount,
       },
     );
 
@@ -130,8 +124,8 @@ export const ordersService = {
     return data;
   },
 
-  async removeItem(itemId: string): Promise<void> {
-    await api.delete(`/orders/${itemId}/items`);
+  async removeItem(orderId: string, itemId: string): Promise<void> {
+    await api.delete(`/orders/${orderId}/items/${itemId}`);
   },
 
   async deleteOrder(orderId: string): Promise<void> {

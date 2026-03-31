@@ -18,8 +18,10 @@ export interface InventoryMovement {
   type: "IN" | "OUT";
   price: number | null;
   reason?: string;
-  supplier?: string;
-  doc?: string;
+  supplier: {
+    name: string;
+    identification: string;
+  };
 }
 
 export interface CreateIngredientRequest {

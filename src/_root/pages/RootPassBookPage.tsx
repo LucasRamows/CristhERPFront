@@ -11,6 +11,7 @@ import RootCreateCustomerSheet from "../components/passbook/RootCreateCustomerSh
 import { PdvPaymentModal } from "../components/pdv/PdvPaymentModal";
 import LoadingComponent from "../../components/shared/LoadingComponent";
 import { toast } from "sonner";
+import { Button } from "../../components/ui/button";
 
 export default function RootPassBookPage() {
   const [clients, setClients] = useState<CostomersResponse[]>([]);
@@ -35,25 +36,23 @@ export default function RootPassBookPage() {
     try {
       const methodMap: Record<
         string,
-        "PIX" | "CASH" | "CREDIT_CARD" | "DEBIT_CARD"
+        "PIX" | "Dinheiro" | "Cartão de Crédito" | "Cartão de Débito"
       > = {
         PIX: "PIX",
-        Crédito: "CREDIT_CARD",
-        Débito: "DEBIT_CARD",
-        Dinheiro: "CASH",
+        CREDIT: "Cartão de Crédito",
+        DEBIT: "Cartão de Débito",
+        CASH: "Dinheiro",
       };
 
       const response = await costomersService.receivePayment(
         activeClient!.id,
         data.amount,
-        methodMap[data.method] || "CASH",
+        methodMap[data.method] || "Dinheiro",
         `Recebimento de dívida - ${data.method}`,
       );
 
-      // Atualiza histórico
       setLedgerEntries((prev) => [response, ...prev]);
 
-      // Atualiza saldo na lista de clientes
       setClients((prev) =>
         prev.map((c) =>
           c.id === activeClient!.id
@@ -72,8 +71,29 @@ export default function RootPassBookPage() {
   const handleDeleteTransaction = async (
     transactionId: string,
     orderId: string,
+    type: string,
   ) => {
     if (!transactionId) return;
+
+    if (type === "PAYMENT") {
+      try {
+        await costomersService.deletePayment(transactionId);
+        const tx = ledgerEntries.find((t) => t.id === transactionId);
+        setLedgerEntries((prev) => prev.filter((t) => t.id !== transactionId));
+        if (tx) {
+          setClients((prev) =>
+            prev.map((c) =>
+              c.id === activeClient!.id
+                ? { ...c, saldoDevedor: c.saldoDevedor + Number(tx.amount) }
+                : c,
+            ),
+          );
+        }
+      } catch (error) {
+        console.error("Erro ao deletar pagamento:", error);
+      }
+      return;
+    }
 
     try {
       await costomersService.deleteTransaction(orderId);
@@ -164,27 +184,26 @@ export default function RootPassBookPage() {
   }
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
-      {/* WRAPPER PRINCIPAL */}{" "}
       <div className="flex gap-2">
-        <div className="flex-1 flex bg-gray-100 rounded-2xl px-4 py-3 items-center border border-gray-200 focus-within:border-[#44A08D] focus-within:bg-white transition-colors">
-          <Search size={18} className="text-gray-400 mr-2 shrink-0" />
+        <div className="flex-1 flex card-default px-4 py-3 items-center">
+          <Search size={18} className="text-muted-foreground mr-2 shrink-0" />
           <input
             type="text"
             placeholder="Buscar apelido ou nome..."
-            className="bg-transparent border-none outline-none w-full font-semibold text-gray-700 placeholder-gray-400"
+            className="bg-transparent border-none outline-none w-full font-semibold text-foreground placeholder-muted-foreground"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <button
+        <Button
           onClick={() => setIsCreateCustomerModalOpen(true)}
-          className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center hover:bg-gray-800 transition-colors shrink-0"
+          className="h-full flex items-center justify-center"
         >
           <Plus size={20} />
-        </button>
+          Adicionar
+        </Button>
       </div>
-      <div className="flex h-full w-full overflow-hidden bg-white rounded-2xl">
-        {/* LADO ESQUERDO: LISTA DE CLIENTES */}
+      <div className="flex h-full w-full overflow-hidden card-default">
         <PassbookClientListPanel
           clients={clients}
           activeClientId={activeClientId}
@@ -223,6 +242,7 @@ export default function RootPassBookPage() {
       {/* SHEET: CADASTRAR CLIENTE */}
       <RootCreateCustomerSheet
         open={isCreateCustomerModalOpen}
+        setClients={setClients}
         onOpenChange={(open) => {
           setIsCreateCustomerModalOpen(open);
           if (!open) setEditingClient(null);
@@ -238,23 +258,6 @@ export default function RootPassBookPage() {
             }
             return [newOrUpdatedClient, ...prev];
           });
-        }}
-      />
-      {/* --- ESTILOS E ANIMAÇÕES --- */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes fadeIn { 
-          from { opacity: 0; transform: translateY(10px); } 
-          to { opacity: 1; transform: translateY(0); } 
-        }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
-      `,
         }}
       />
     </div>

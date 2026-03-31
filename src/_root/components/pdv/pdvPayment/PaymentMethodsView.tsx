@@ -1,16 +1,22 @@
 import { CheckCircle, Hammer, Loader2 } from "lucide-react";
+import { PaymentMethod, PaymentMethodLabel } from "../../../../types/enums";
 
 interface PaymentMethodsViewProps {
-  activeMethod: string | null;
+  activeMethod: PaymentMethod | string | null;
   isSubmitting: boolean;
   hideFiado?: boolean;
   mode: "pdv" | "payment_only";
-  onSelectMethod: (method: string) => void;
+  onSelectMethod: (method: PaymentMethod | string) => void;
   onEnterFiadoMode: () => void;
   onConfirm: () => void;
 }
 
-const PAYMENT_METHODS = ["PIX", "Crédito", "Débito", "Dinheiro"];
+const PAYMENT_METHODS = [
+  PaymentMethod.PIX,
+  PaymentMethod.CREDIT_CARD,
+  PaymentMethod.DEBIT_CARD,
+  PaymentMethod.CASH,
+];
 
 export function PaymentMethodsView({
   activeMethod,
@@ -53,7 +59,7 @@ export function PaymentMethodsView({
                   : "border-gray-100 bg-white hover:border-gray-200 text-gray-600"
               }`}
             >
-              {method}
+              {PaymentMethodLabel[method as PaymentMethod] || method}
             </button>
           );
         })}

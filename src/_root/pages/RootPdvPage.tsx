@@ -346,11 +346,12 @@ export default function RootPdvPage() {
         <PdvProductModal
           product={activeModalProduct}
           onClose={() => setActiveModalProduct(null)}
-          onConfirm={(prod) => {
-            actions.confirmAddToCart(prod);
+          onConfirm={(prod, options) => {
+            actions.confirmAddToCart(prod, options);
             setActiveModalProduct(null);
             setCartMobileOpen(true);
           }}
+          activeEntity={activeEntity}
         />
       )}
 
@@ -359,11 +360,12 @@ export default function RootPdvPage() {
         <PdvWeightModal
           product={activeModalProduct}
           onClose={() => setActiveModalProduct(null)}
-          onConfirm={(prod) => {
-            actions.confirmAddToCart(prod);
+          onConfirm={(prod, options) => {
+            actions.confirmAddToCart(prod, options);
             setActiveModalProduct(null);
             setCartMobileOpen(true);
           }}
+          activeEntity={activeEntity}
         />
       )}
       {/* MODAL 2: Pagamento Rápido */}

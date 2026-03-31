@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import type { PdvEntity } from "../_root/types/PdvEntity";
-import { ordersService } from "../services/orders/orders.service";
+import { ordersService, type OpenOrdersResponse } from "../services/orders/orders.service";
+import { mapOrderToPdvEntity } from "../lib/utils";
 
 export const usePdvActions = (
   activeEntity: PdvEntity | null,
@@ -18,10 +19,11 @@ export const usePdvActions = (
   // --- 1. FUNÇÕES AUXILIARES (PRIVADAS) ---
 
   const updateOrderInState = useCallback(
-    (updatedOrder: any) => {
+    (apiResponse: OpenOrdersResponse) => {
+      const entity = mapOrderToPdvEntity(apiResponse);
       setOpenOrders((prev) => {
-        const otherOrders = prev.filter((o) => o.id !== updatedOrder.id);
-        return [...otherOrders, updatedOrder];
+        const otherOrders = prev.filter((o) => o.id !== entity.id);
+        return [...otherOrders, entity];
       });
     },
     [setOpenOrders],
@@ -51,7 +53,7 @@ export const usePdvActions = (
 
   const handleEntityClick = (entity: PdvEntity) => openEntity(entity);
 
-  const handleAddClick = (entity: any) => openEntity(entity, "menu");
+  const handleAddClick = (entity: PdvEntity) => openEntity(entity, "menu");
 
   const handleCaixaRapido = () => {
     const caixaVirtual: PdvEntity = {
@@ -62,6 +64,9 @@ export const usePdvActions = (
       label: "CAIXA RÁPIDO",
       status: "open",
       total: 0,
+      subtotal: 0,
+      discount: 0,
+      serviceTax: 0,
       items: [],
     };
     openEntity(caixaVirtual, "menu");
@@ -83,27 +88,21 @@ export const usePdvActions = (
 
     try {
       setIsSyncing(true);
+      const nowBR = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+      const saleDateISO = new Date(nowBR).toISOString();
+
       const response = await ordersService.createOrder({
         orderType: "CARD",
         reference: cleanRef,
         operatorId: operatorId || "",
-        total: 0,
+        sale_date: saleDateISO,
         items: [],
       });
 
       // 3. Sucesso: Sincroniza estado global e abre a entidade
       await fetchOrders();
 
-      const newEntity: PdvEntity = {
-        id: response.id,
-        orderType: "CARD",
-        name: `COMANDA ${cleanRef}`,
-        reference: cleanRef,
-        label: `CMD ${cleanRef}`,
-        status: "open",
-        total: 0,
-        items: [],
-      };
+      const newEntity: PdvEntity = mapOrderToPdvEntity(response);
 
       openEntity(newEntity, "menu");
       toast.success(`Comanda ${cleanRef} aberta com sucesso.`);
@@ -120,9 +119,8 @@ export const usePdvActions = (
 
   // --- 3. AÇÕES DE CARRINHO E BACKEND ---
 
-  const confirmAddToCart = async (item: any) => {
+  const confirmAddToCart = async (item: any, options?: { saleDate?: Date }) => {
     if (!activeEntity) return;
-    console.log("item", item);
     const createOrderItem = {
       productId: item.id,
       uniqueId: `local_${Date.now()}_${Math.random()
@@ -136,7 +134,6 @@ export const usePdvActions = (
     };
 
     const existingItems = activeEntity.items || [];
-    console.log("aqui", existingItems);
     const existingItem = existingItems.find(
       (i: any) => i.product.id === item.id,
     );
@@ -155,9 +152,6 @@ export const usePdvActions = (
       );
     }
 
-    // --- 2. FLUXO DE ADIÇÃO (NOVO ITEM) ---
-
-    // Fluxo Online (Mesas Livres, Comandas Temporárias ou Caixa Rápido)
     try {
       setIsSyncing(true);
 
@@ -167,12 +161,14 @@ export const usePdvActions = (
         activeEntity.id === "caixa_balcao";
 
       if (isPlaceholderId) {
-        // Criar o pedido no backend com o primeiro item
+        const nowBR = new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' });
+        const saleDateISO = options?.saleDate ? options.saleDate.toISOString() : new Date(nowBR).toISOString();
+
         const response = await ordersService.createOrder({
           orderType: activeEntity.orderType || "COUNTER",
           reference: activeEntity.reference || "BALCÃO",
           operatorId: operatorId || "",
-          total: createOrderItem.total,
+          sale_date: saleDateISO,
           items: [
             {
               productId: createOrderItem.productId,
@@ -183,43 +179,21 @@ export const usePdvActions = (
           ],
         });
 
-        // Sincroniza e atualiza para a entidade real do backend
         await fetchOrders();
-        updateOrderInState(response);
-        setActiveEntity({
-          id: response.id,
-          orderType: response.orderType as any,
-          name:
-            response.orderType === "TABLE"
-              ? `MESA ${response.reference}`
-              : `COMANDA ${response.reference}`,
-          reference: response.reference,
-          label:
-            response.orderType === "TABLE"
-              ? `MESA ${response.reference}`
-              : `CMD ${response.reference}`,
-          status: response.status.toLowerCase() as any,
-          total: parseFloat(response.total),
-          items: response.items,
-        });
+        syncOrder(response);
+        const mappedEntity = mapOrderToPdvEntity(response);
+        setActiveEntity(mappedEntity);
         toast.success(
           `${
             activeEntity.orderType === "TABLE" ? "Mesa" : "Comanda"
           } aberta com sucesso!`,
         );
       } else {
-        // Adicionar a um pedido que já existe no backend
         const response = await ordersService.addItemsToOrder(
           activeEntity.id,
           createOrderItem,
         );
-        updateOrderInState(response);
-        setActiveEntity((prev: any) => ({
-          ...prev,
-          total: parseFloat(response.total),
-          items: response.items,
-          status: "open",
-        }));
+        syncOrder(response);
       }
     } catch (error: any) {
       console.error("Erro ao processar item:", error);
@@ -244,15 +218,15 @@ export const usePdvActions = (
         const item = activeEntity.items?.find((i: any) => i.id === uniqueId);
         if (!item) return;
         const newQtd = Number(item.quantity) + delta;
-
         if (newQtd <= 0) {
-          await ordersService.removeItem(uniqueId);
+          await ordersService.removeItem(activeEntity.id, uniqueId);
           await fetchOrders();
         } else {
           const response = await ordersService.updateItems(activeEntity.id, [
             { id: uniqueId, quantity: newQtd },
           ]);
-          updateOrderInState(response);
+          console.log("response", response);
+          syncOrder(response);
         }
       } else {
         // Atualização Local (Rascunhos)
@@ -281,14 +255,7 @@ export const usePdvActions = (
     }
   };
   const handleConfirmPayment = useCallback(
-    async (data: {
-      method: string;
-      amount: number;
-      subtotal: number;
-      serviceTax: number;
-      discount: number;
-      customerId?: string;
-    }) => {
+    async (data: { method: string; discount: number; customerId?: string }) => {
       if (!activeEntity?.id || activeEntity.id.startsWith("temp_")) {
         console.warn(
           "Não é possível fechar um pedido temporário, conecte-se a internet.",
@@ -298,16 +265,11 @@ export const usePdvActions = (
 
       try {
         setIsSyncing(true);
-        const mappedMethod =
-          data.method === "Fiado" ? "STORE_CREDIT" : data.method;
         await ordersService.closeOrder(
           activeEntity.id,
-          mappedMethod,
-          data.customerId || "",
-          data.subtotal,
-          data.serviceTax,
+          data.method,
           data.discount,
-          data.amount,
+          data.customerId || undefined,
         );
 
         setOpenOrders((prev) => prev.filter((o) => o.id !== activeEntity.id));
@@ -329,6 +291,29 @@ export const usePdvActions = (
     ],
   );
 
+  const syncOrder = useCallback(
+    (apiResponse: OpenOrdersResponse) => {
+      const entity = mapOrderToPdvEntity(apiResponse);
+
+      setOpenOrders((prev) => {
+        const filtered = prev.filter((o) => o.id !== entity.id);
+        return [...filtered, entity];
+      });
+
+      if (activeEntity?.id === entity.id) {
+        setActiveEntity({
+          ...activeEntity,
+          total: entity.total,
+          subtotal: entity.subtotal,
+          discount: entity.discount,
+          serviceTax: entity.serviceTax,
+          items: entity.items,
+          status: entity.status,
+        });
+      }
+    },
+    [activeEntity, setOpenOrders, setActiveEntity],
+  );
   return {
     handleEntityClick,
     handleAddClick,

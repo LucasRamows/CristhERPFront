@@ -1,24 +1,41 @@
-import { Scale, X } from "lucide-react";
 import { useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { CalendarIcon, Scale, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
 } from "../../../components/ui/dialog";
 import type { SelectedProductForObs } from "../../../services/products/products.service";
+import { Button } from "../../../components/ui/button";
+import { Calendar } from "../../../components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../../components/ui/popover";
 
 export interface PdvWeightModalProps {
   product: SelectedProductForObs | null;
   onClose: () => void;
-  onConfirm: (product: SelectedProductForObs) => void;
+  onConfirm: (product: SelectedProductForObs, options?: any) => void;
+  activeEntity?: any;
 }
 
 export function PdvWeightModal({
   product,
   onClose,
   onConfirm,
+  activeEntity,
 }: PdvWeightModalProps) {
   const [weightInput, setWeightInput] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [saleDate, setSaleDate] = useState<Date | undefined>();
+
+  const isBalcao =
+    activeEntity?.id === "caixa_balcao" ||
+    activeEntity?.orderType === "COUNTER";
 
   const weightKg = parseFloat(weightInput.replace(",", ".")) || 0;
   const totalPrice = weightKg * Number(product?.price || 0);
@@ -26,18 +43,27 @@ export function PdvWeightModal({
 
   const handleClose = () => {
     setWeightInput("");
+    setShowDatePicker(false);
+    setSaleDate(undefined);
     onClose();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = (overrideDate?: Date) => {
     if (!product || !isValid) return;
-    onConfirm({
-      ...product,
-      price: totalPrice,
-      quantity: 1,
-      obs: [`${weightKg.toFixed(3)} kg`],
-    });
+    onConfirm(
+      {
+        ...product,
+        price: totalPrice,
+        quantity: 1,
+        obs: [`${weightKg.toFixed(3)} kg`],
+      },
+      {
+        saleDate: overrideDate ? overrideDate : new Date(),
+      },
+    );
     setWeightInput("");
+    setShowDatePicker(false);
+    setSaleDate(undefined);
   };
 
   // Teclado numérico
@@ -132,15 +158,76 @@ export function PdvWeightModal({
               ))}
             </div>
 
-            {/* Botão confirmar */}
-            <div className="p-6 pt-3">
-              <button
-                disabled={!isValid}
-                onClick={handleConfirm}
-                className="w-full bg-[#E2F898] text-gray-900 font-black text-xl py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Confirmar — R$ {totalPrice.toFixed(2)}
-              </button>
+            {/* Botão confirmar e Retroativa */}
+            <div className="p-6 pt-3 flex flex-col gap-3">
+              {showDatePicker ? (
+                <div className="flex flex-col gap-4 animate-fade-in bg-white p-4 rounded-[20px] border border-gray-100 shadow-sm">
+                  <span className="text-sm font-bold text-gray-700 text-center">
+                    Selecione a Data da Venda
+                  </span>
+
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={"outline"}
+                        className={`w-full justify-start text-left font-normal py-6 rounded-xl ${
+                          !saleDate ? "text-muted-foreground" : ""
+                        }`}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {saleDate ? (
+                          format(saleDate, "PPP", { locale: ptBR })
+                        ) : (
+                          <span>Selecionar data</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 z-60" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={saleDate}
+                        onSelect={setSaleDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowDatePicker(false)}
+                      className="flex-1 bg-gray-100 text-gray-700 font-bold py-3 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={!saleDate || !isValid}
+                      onClick={() => handleConfirm(saleDate)}
+                      className="flex-1 bg-[#44A08D] text-white font-bold py-3 rounded-xl hover:bg-[#44A08D]/90 transition-colors disabled:opacity-50"
+                    >
+                      Lançar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <button
+                    disabled={!isValid}
+                    onClick={() => handleConfirm()}
+                    className="w-full bg-[#E2F898] text-gray-900 font-black text-xl py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Confirmar — R$ {totalPrice.toFixed(2)}
+                  </button>
+
+                  {isBalcao && isValid && (
+                    <button
+                      onClick={() => setShowDatePicker(true)}
+                      className="w-full bg-gray-100 text-gray-700 font-bold text-lg py-4 rounded-2xl border border-gray-200 hover:bg-gray-200 active:scale-[0.97] transition-all"
+                    >
+                      Lançar Venda Retroativa
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           </>
         )}

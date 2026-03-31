@@ -79,3 +79,20 @@ export const SaleStatus = {
   CANCELLED: "CANCELLED",
 } as const;
 export type SaleStatus = typeof SaleStatus[keyof typeof SaleStatus];
+
+export const PaymentMethod = {
+  PIX: "PIX",
+  CASH: "CASH",
+  CREDIT_CARD: "CREDIT_CARD",
+  DEBIT_CARD: "DEBIT_CARD",
+  STORE_CREDIT: "STORE_CREDIT",
+} as const;
+export type PaymentMethod = typeof PaymentMethod[keyof typeof PaymentMethod];
+
+export const PaymentMethodLabel: Record<PaymentMethod, string> = {
+  [PaymentMethod.PIX]: "PIX",
+  [PaymentMethod.CREDIT_CARD]: "Crédito",
+  [PaymentMethod.DEBIT_CARD]: "Débito",
+  [PaymentMethod.CASH]: "Dinheiro",
+  [PaymentMethod.STORE_CREDIT]: "Fiado",
+};

@@ -8,14 +8,14 @@ import {
   History,
   Phone,
   ShieldAlert,
-  Trash,
+  Trash
 } from "lucide-react";
+import { Button } from "../../../components/ui/button";
+import { formatPhone, formatTime } from "../../../lib/utils";
 import {
   type CostomersResponse,
   type LedgerEntry,
 } from "../../../services/costomers/customers.service";
-import { formatPhone, formatTime } from "../../../lib/utils";
-import { Button } from "../../../components/ui/button";
 
 export interface PassbookClientDetailsPanelProps {
   activeClient: CostomersResponse | null;
@@ -24,7 +24,11 @@ export interface PassbookClientDetailsPanelProps {
   toggleBloqueio: () => void;
   setIsPaymentModalOpen: (open: boolean) => void;
   onEditProfile: () => void;
-  handleDeleteTransaction: (transactionId: string, orderId: string) => void;
+  handleDeleteTransaction: (
+    transactionId: string,
+    orderId: string,
+    type: string,
+  ) => void;
 }
 
 export function PassbookClientDetailsPanel({
@@ -38,17 +42,17 @@ export function PassbookClientDetailsPanel({
 }: PassbookClientDetailsPanelProps) {
   return (
     <div
-      className={`flex-1 flex-col bg-white overflow-hidden relative ${
+      className={`flex-1 flex-col bg-background overflow-hidden relative ${
         !activeClient ? "hidden lg:flex" : "flex"
       }`}
     >
       {!activeClient ? (
         // EMPTY STATE
-        <div className="h-full flex flex-col items-center justify-center text-gray-400 p-8 text-center bg-gray-50/50">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <ShieldAlert size={48} className="text-gray-300" />
+        <div className="h-full flex flex-col items-center justify-center text-primary p-8 text-center bg-background">
+          <div className="w-24 h-24 card-default flex items-center justify-center mb-6">
+            <ShieldAlert size={48} className="text-primary" />
           </div>
-          <h2 className="text-2xl font-black text-gray-700 mb-2">
+          <h2 className="text-2xl font-black text-primary mb-2">
             Nenhum cliente selecionado
           </h2>
           <p className="font-medium max-w-sm">
@@ -58,25 +62,32 @@ export function PassbookClientDetailsPanel({
         </div>
       ) : (
         // PERFIL DO CLIENTE
-        <div className="h-full flex flex-col animate-fade-in">
+        <div className="h-full flex flex-col animate-fade-in p-4 md:p-8 gap-3">
           {/* HEADER DO CLIENTE */}
-          <div className="p-6 md:p-8 border-b border-gray-100 flex items-start gap-6 shrink-0 bg-white">
-            <button
-              onClick={() => setActiveClientId(null)}
-              className="lg:hidden w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 shrink-0"
-            >
-              <ArrowLeft size={20} />
-            </button>
-
-            <div className="relative shrink-0 hidden md:block">
-              <div className="w-20 h-20 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-400 font-black text-4xl">
-                {activeClient.nickname.charAt(0)}
+          <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6 shrink-0 bg-background">
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <button
+                onClick={() => setActiveClientId(null)}
+                className="lg:hidden w-10 h-10 bg-secondary rounded-full flex items-center justify-center text-primary shrink-0 transition-colors hover:bg-secondary/80"
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div className="relative shrink-0">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center bg-decoration text-primary font-black text-3xl md:text-4xl">
+                  {activeClient.nickname.charAt(0)}
+                </div>
               </div>
+              <button
+                onClick={onEditProfile}
+                className="md:hidden ml-auto bg-secondary hover:bg-secondary/80 text-primary px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0"
+              >
+                Editar
+              </button>
             </div>
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 w-full">
               <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-3xl font-black text-gray-900 truncate">
+                <h2 className="text-3xl font-black text-primary truncate">
                   {activeClient.nickname}
                 </h2>
                 <span
@@ -97,11 +108,11 @@ export function PassbookClientDetailsPanel({
                   )}
                 </span>
               </div>
-              <p className="text-lg font-bold text-gray-500 mb-3 truncate">
+              <p className="text-lg font-bold text-muted-foreground mb-3 truncate">
                 {activeClient.fullName}
               </p>
 
-              <div className="flex flex-wrap gap-4 text-sm font-semibold text-gray-500">
+              <div className="flex flex-wrap gap-4 text-sm font-semibold text-muted-foreground">
                 <div className="flex items-center gap-1.5">
                   <DollarSign size={16} /> CPF: {activeClient.cpf}
                 </div>
@@ -113,35 +124,30 @@ export function PassbookClientDetailsPanel({
 
             <button
               onClick={onEditProfile}
-              className="hidden md:flex bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0"
+              className="hidden md:flex bg-secondary hover:bg-secondary/80 text-primary px-4 py-2 rounded-xl font-bold text-sm transition-colors shrink-0"
             >
               Editar Perfil
             </button>
           </div>
+          <div className="flex flex-col gap-3">
+            <div className="bg-card rounded-2xl md:rounded-[32px] p-6 md:p-8 relative overflow-hidden shadow-sm border border-border">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-decoration opacity-[0.03] rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
 
-          {/* CONTEÚDO SCROLLÁVEL */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar bg-gray-50/50">
-            {/* 2. PAINEL DE CRÉDITO (DARK MODE) */}
-            <div className="bg-[#121212] rounded-[32px] p-8 shadow-2xl relative overflow-hidden mb-8">
-              {/* Efeito visual de fundo */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#E2F898] opacity-[0.03] rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
-                {/* Saldo Devedor (Foco Principal) */}
-                <div className="border-b md:border-b-0 md:border-r border-gray-800 pb-8 md:pb-0 md:pr-8">
-                  <p className="text-gray-400 font-bold uppercase tracking-wider text-sm mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 relative z-10">
+                <div className="border-b md:border-b-0 md:border-r border-border pb-6 md:pb-0 md:pr-8">
+                  <p className="text-muted-foreground font-bold uppercase tracking-wider text-sm mb-2">
                     Saldo Devedor Atual
                   </p>
                   <h3
-                    className={`text-6xl font-black tracking-tight ${
+                    className={`text-4xl md:text-6xl font-black tracking-tight ${
                       activeClient.saldoDevedor > 0
-                        ? "text-[#FF4C4C]"
-                        : "text-gray-300"
+                        ? "text-destructive"
+                        : "text-muted-foreground"
                     }`}
                   >
-                    R$ {activeClient.saldoDevedor.toFixed(2)}
+                    R$ {(Number(activeClient.saldoDevedor) || 0).toFixed(2)}
                   </h3>
-                  <div className="mt-4 inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl text-gray-300 font-bold text-sm">
+                  <div className="mt-4 inline-flex items-center gap-2 bg-secondary/50 px-4 py-2 rounded-xl text-primary font-bold text-sm">
                     <History size={16} /> Vencimento todo dia{" "}
                     {activeClient.settlementDate}
                   </div>
@@ -150,27 +156,28 @@ export function PassbookClientDetailsPanel({
                 {/* Limites */}
                 <div className="flex flex-col justify-center gap-6">
                   <div>
-                    <p className="text-gray-500 font-bold uppercase tracking-wider text-xs mb-1">
+                    <p className="text-muted-foreground font-bold uppercase tracking-wider text-xs mb-1">
                       Limite de Crédito Aprovado
                     </p>
-                    <p className="text-2xl font-black text-white">
-                      R$ {activeClient.creditLimit}
+                    <p className="text-2xl font-black text-primary">
+                      R$ {Number(activeClient.creditLimit || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-500 font-bold uppercase tracking-wider text-xs mb-1">
+                    <p className="text-muted-foreground font-bold uppercase tracking-wider text-xs mb-1">
                       Crédito Disponível p/ Compra
                     </p>
                     <p
                       className={`text-3xl font-black ${
                         activeClient.creditLimit - activeClient.saldoDevedor > 0
-                          ? "text-[#00E676]"
-                          : "text-red-500"
+                          ? "text-decoration"
+                          : "text-destructive"
                       }`}
                     >
                       R${" "}
                       {(
-                        activeClient.creditLimit - activeClient.saldoDevedor
+                        Number(activeClient.creditLimit || 0) -
+                        Number(activeClient.saldoDevedor || 0)
                       ).toFixed(2)}
                     </p>
                   </div>
@@ -179,42 +186,40 @@ export function PassbookClientDetailsPanel({
             </div>
 
             {/* 5. BOTÕES DE AÇÃO RÁPIDA */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
               <button
                 onClick={() => setIsPaymentModalOpen(true)}
                 disabled={activeClient.saldoDevedor === 0}
-                className="bg-[#00E676] text-gray-900 py-4 px-6 rounded-2xl font-black text-lg flex items-center justify-center gap-2 hover:brightness-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-decoration text-decoration-foreground py-3 px-4 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-base md:text-lg flex items-center justify-center gap-2 hover:brightness-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ArrowDownRight size={24} /> Receber Valor
+                <ArrowDownRight size={20} className="md:w-6 md:h-6" /> Receber Valor
               </button>
-              {/* 
-              <button className="bg-white border-2 border-gray-200 text-gray-800 py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 hover:border-[#44A08D] hover:text-[#44A08D] active:scale-95 transition-all shadow-sm">
-                <MessageCircle size={24} /> Cobrar via Zap
-              </button> */}
 
               <button
                 onClick={toggleBloqueio}
-                className={`border-2 py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm ${
+                className={`border-2 py-3 px-4 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-bold text-base md:text-lg flex items-center justify-center gap-2 active:scale-95 transition-all shadow-sm ${
                   activeClient.isBlocked
-                    ? "bg-red-50 border-red-200 text-red-600 hover:border-red-500 hover:bg-red-100"
-                    : "bg-white border-gray-200 text-gray-600 hover:border-red-500 hover:text-red-500 hover:bg-red-50"
+                    ? "bg-destructive/10 border-destructive text-destructive hover:bg-destructive/20"
+                    : "bg-card border-border text-foreground hover:border-destructive hover:text-destructive hover:bg-destructive/10"
                 }`}
               >
-                <Ban size={24} />{" "}
+                <Ban size={20} className="md:w-6 md:h-6" />{" "}
                 {activeClient.isBlocked
                   ? "Desbloquear Conta"
                   : "Bloquear Conta"}
               </button>
             </div>
-
+          </div>
+          {/* CONTEÚDO SCROLLÁVEL */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             {/* 4. HISTÓRICO DE MOVIMENTAÇÃO (EXTRATO) */}
             <div>
-              <h3 className="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
-                <History className="text-gray-400" /> Extrato do Cliente
+              <h3 className="text-xl font-black text-primary mb-4 flex items-center gap-2">
+                <History className="text-primary" /> Extrato do Cliente
               </h3>
 
-              <div className="bg-white rounded-[24px] border border-gray-200 shadow-sm overflow-hidden">
-                <div className="hidden sm:grid grid-cols-12 gap-4 p-4 md:p-6 border-b border-gray-100 bg-gray-50 text-gray-500 font-bold text-sm uppercase tracking-wider">
+              <div className="card-default overflow-hidden">
+                <div className="hidden sm:grid grid-cols-12 gap-4 p-4 md:p-6 border-b border-border bg-muted/50 text-muted-foreground font-bold text-sm uppercase tracking-wider">
                   <div className="col-span-3">Data / Hora</div>
                   <div className="col-span-5">Descrição</div>
                   <div className="col-span-2 text-center">Operador</div>
@@ -226,30 +231,34 @@ export function PassbookClientDetailsPanel({
                     transactions.map((tx) => (
                       <div
                         key={tx.id}
-                        className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 p-4 md:p-6 items-center border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
+                        className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 p-4 md:p-6 items-center border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                       >
-                        <div className="col-span-1 flex items-center justify-between sm:col-span-3 text-sm font-bold text-gray-500">
+                        <div className="col-span-1 flex items-center justify-between sm:col-span-3 text-sm font-bold text-muted-foreground">
                           <div className="col-span-1">
                             <Button
                               variant="destructive"
                               size="icon"
                               className=""
                               onClick={() =>
-                                handleDeleteTransaction(tx.id, tx.orderId)
+                                handleDeleteTransaction(
+                                  tx.id,
+                                  tx.orderId,
+                                  tx.type,
+                                )
                               }
                             >
                               <Trash />
                             </Button>
                           </div>{" "}
-                          {formatTime(tx.createdAt)}
+                          {formatTime(tx.order.sale_date)}
                         </div>
 
                         <div className="col-span-1 sm:col-span-5 flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                               tx.type === "DEBT"
-                                ? "bg-red-100 text-red-500"
-                                : "bg-green-100 text-green-600"
+                                ? "bg-destructive/10 text-destructive"
+                                : "bg-green-500/10 text-green-500"
                             }`}
                           >
                             {tx.type === "DEBT" ? (
@@ -258,19 +267,19 @@ export function PassbookClientDetailsPanel({
                               <ArrowDownRight size={16} />
                             )}
                           </div>
-                          <span className="font-extrabold text-gray-800">
+                          <span className="font-extrabold text-foreground">
                             {tx.description}
                           </span>
                         </div>
 
-                        <div className="col-span-1 sm:col-span-2 sm:text-center text-sm font-semibold text-gray-400">
+                        <div className="col-span-1 sm:col-span-2 sm:text-center text-sm font-semibold text-muted-foreground">
                           {tx.operatorId ? "Sistema" : "Manual"}
                         </div>
 
                         <div
                           className={`col-span-1 sm:col-span-2 text-left sm:text-right font-black text-lg ${
                             tx.type === "DEBT"
-                              ? "text-red-500"
+                              ? "text-destructive"
                               : "text-green-500"
                           }`}
                         >
@@ -280,7 +289,7 @@ export function PassbookClientDetailsPanel({
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-gray-400 font-bold">
+                    <div className="p-8 text-center text-muted-foreground font-bold">
                       Nenhuma movimentação registrada.
                     </div>
                   )}

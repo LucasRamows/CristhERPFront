@@ -120,7 +120,7 @@ export function PdvHistorySheet({
                               : "Balcão"}
                           </span>
                           <span className="text-[10px] font-bold text-gray-400">
-                            {formatTime(order.openedAt)}
+                            {formatTime(order.sale_date)}
                           </span>
                         </div>
                         <h3 className="text-xl font-black text-gray-900">

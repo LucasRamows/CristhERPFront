@@ -1,16 +1,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import SuccessScreen from "../../../components/shared/SuccessPopUp";
+import { Sheet, SheetContent, SheetTitle } from "../../../components/ui/sheet";
 import {
   formatDocument,
   formatMoney,
   formatPhone,
   removeMask,
 } from "../../../lib/utils";
-import { useEffect } from "react";
-import { Sheet, SheetContent, SheetTitle } from "../../../components/ui/sheet";
 import {
   customerSchema,
   type CustomerFormType,
@@ -24,6 +23,7 @@ import {
 interface RootCreateCustomerSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  setClients: React.Dispatch<React.SetStateAction<CostomersResponse[]>>;
   onSuccess: (newClient: CostomersResponse) => void;
   initialData?: CostomersResponse | null;
 }
@@ -31,6 +31,7 @@ interface RootCreateCustomerSheetProps {
 export default function RootCreateCustomerSheet({
   open,
   onOpenChange,
+  setClients,
   onSuccess,
   initialData,
 }: RootCreateCustomerSheetProps) {
@@ -57,8 +58,8 @@ export default function RootCreateCustomerSheet({
         fullName: initialData?.fullName || "",
         nickname: initialData?.nickname || "",
         phone: initialData?.phone || "",
-        cpf: initialData?.cpf || "",
-        creditLimit: initialData?.creditLimit || 0,
+        cpf: formatDocument(initialData?.cpf || ""),
+        creditLimit: Number(initialData?.creditLimit) || 0,
         settlementDate: initialData?.settlementDate || 5,
       });
       setError(null);
@@ -79,15 +80,18 @@ export default function RootCreateCustomerSheet({
         settlementDate: values.settlementDate,
       };
 
-      let response;
+      let responseData: CostomersResponse;
       if (isEdit && initialData) {
-        response = await costomersService.updateCustomer(
+        responseData = await costomersService.updateCustomer(
           initialData.id,
           payload,
         );
+        setClients((prev) =>
+          prev.map((c) => (c.id === initialData.id ? { ...c, ...responseData } : c)),
+        );
       } else {
         await costomersService.createCustomer(payload);
-        response = {
+        responseData = {
           id: Math.random().toString(36).substring(7),
           fullName: values.fullName,
           nickname: values.nickname,
@@ -97,10 +101,10 @@ export default function RootCreateCustomerSheet({
           isBlocked: false,
           saldoDevedor: 0,
           settlementDate: values.settlementDate,
-        };
+        } as CostomersResponse;
       }
 
-      onSuccess(response);
+      onSuccess(responseData);
       setIsSuccess(true);
 
       setTimeout(() => {

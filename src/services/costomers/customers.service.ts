@@ -44,6 +44,7 @@ export interface LedgerEntry {
     orderType: string;
     reference: string;
     status: string;
+    sale_date: string;
     subtotal: string;
     serviceTax: string;
     discount: string;
@@ -118,11 +119,13 @@ export const costomersService = {
   async deleteTransaction(id: string): Promise<void> {
     await api.delete(`/customers/ledger/${id}`);
   },
-
+  async deletePayment(id: string): Promise<void> {
+    await api.delete(`/customers/ledger/${id}/payment`);
+  },
   async receivePayment(
     id: string,
     amount: number,
-    method: "PIX" | "CASH" | "CREDIT_CARD" | "DEBIT_CARD",
+    method: "PIX" | "Dinheiro" | "Cartão de Crédito" | "Cartão de Débito",
     description?: string,
   ): Promise<LedgerEntry> {
     const { data } = await api.post<LedgerEntry>(`/customers/${id}/receive`, {

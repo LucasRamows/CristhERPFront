@@ -25,7 +25,7 @@ export function PassbookClientListPanel({
 
   return (
     <div
-      className={`w-full lg:w-[450px] flex flex-col bg-gray-50/50 border-r border-gray-200 shrink-0 transition-transform ${
+      className={`w-full lg:w-1/3 flex flex-col transition-transform ${
         activeClientId ? "hidden lg:flex" : "flex"
       }`}
     >
@@ -35,15 +35,15 @@ export function PassbookClientListPanel({
             <button
               key={client.id}
               onClick={() => setActiveClientId(client.id)}
-              className={`w-full text-left p-4 mb-3 rounded-[24px] border-2 transition-all flex items-center gap-4 ${
+              className={`w-full cursor-pointer card-default text-left p-4 mb-3 flex items-center gap-4 ${
                 activeClientId === client.id
-                  ? "bg-white border-gray-900 shadow-md"
-                  : "bg-white border-gray-100 hover:border-gray-300"
+                  ? "bg-secondary border-secondary shadow-md"
+                  : "bg-card border-decoration hover:border-secondary"
               }`}
             >
               {/* Avatar Simples */}
               <div className="relative shrink-0">
-                <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-black text-xl">
+                <div className="w-14 h-14 rounded-full bg-decoration flex items-center justify-center text-muted-foreground font-black text-xl">
                   {client.nickname.charAt(0)}
                 </div>
                 <div
@@ -63,10 +63,10 @@ export function PassbookClientListPanel({
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-black text-lg text-gray-900 truncate">
+                <p className="font-black text-lg text-primary truncate">
                   {client.nickname}
                 </p>
-                <p className="text-sm font-semibold text-gray-500 truncate">
+                <p className="text-sm font-semibold text-muted-foreground truncate">
                   {client.fullName}
                 </p>
               </div>
@@ -78,7 +78,7 @@ export function PassbookClientListPanel({
                     client.saldoDevedor > 0 ? "text-red-500" : "text-gray-400"
                   }`}
                 >
-                  R$ {client.saldoDevedor.toFixed(2)}
+                  R$ {(Number(client.saldoDevedor) || 0).toFixed(2)}
                 </p>
               </div>
             </button>

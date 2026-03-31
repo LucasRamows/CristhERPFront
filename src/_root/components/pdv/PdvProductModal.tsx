@@ -1,4 +1,9 @@
 import { X } from "lucide-react";
+import { useState } from "react";
+import {
+  PdvRenderActions,
+  PdvRenderDatePicker,
+} from "./retroactiveDates/PdvRenderActionDates";
 import {
   Dialog,
   DialogContent,
@@ -9,16 +14,31 @@ import type { SelectedProductForObs } from "../../../services/products/products.
 export interface PdvProductModalProps {
   product: SelectedProductForObs | null;
   onClose: () => void;
-  onConfirm: (product: SelectedProductForObs) => void;
+  onConfirm: (product: SelectedProductForObs, options?: any) => void;
+  activeEntity?: any;
 }
 
 export function PdvProductModal({
   product,
   onClose,
   onConfirm,
+  activeEntity,
 }: PdvProductModalProps) {
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [saleDate, setSaleDate] = useState<Date | undefined>();
+
+  const isBalcao =
+    activeEntity?.id === "caixa_balcao" ||
+    activeEntity?.orderType === "COUNTER";
+
+  const handleClose = () => {
+    setShowDatePicker(false);
+    setSaleDate(undefined);
+    onClose();
+  };
+
   return (
-    <Dialog open={!!product} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={!!product} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
         showCloseButton={false}
         className="p-0 border-none rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl flex flex-col gap-0 bg-white"
@@ -26,30 +46,46 @@ export function PdvProductModal({
         <DialogTitle className="sr-only">Confirmar Item</DialogTitle>
         {product && (
           <>
-            <div className="p-6 md:p-8 bg-gray-50 flex justify-between items-start">
+            <div className="relative p-6 md:p-8 bg-gradient-to-br from-gray-50 to-gray-100 flex justify-between items-start rounded-t-3xl">
               <div>
-                <h2 className="text-2xl font-black">{product.name}</h2>
-                <p className="text-lg text-[#44A08D] font-bold">
+                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight text-gray-900">
+                  {product.name}
+                </h2>
+                <p className="text-xl text-[#44A08D] font-extrabold mt-1">
                   R$ {Number(product.price).toFixed(2)}
                 </p>
               </div>
+
+              {/* Close */}
               <button
-                onClick={onClose}
-                className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-100 transition-colors"
+                onClick={handleClose}
+                className="p-2.5 bg-white/80 backdrop-blur rounded-full shadow-md hover:bg-white transition-all"
               >
-                <X size={24} />
+                <X size={22} className="text-gray-700" />
               </button>
             </div>
-            <div className="p-6 border-t border-gray-100 bg-white flex flex-col gap-4">
-              <p className="font-bold text-gray-500 text-center">
+
+            <div className="p-6 bg-white flex flex-col gap-4 border-t border-gray-100">
+              <p className="font-semibold text-gray-500 text-center text-sm md:text-base">
                 Deseja adicionar este item ao carrinho?
               </p>
-              <button
-                onClick={() => onConfirm(product)}
-                className="w-full bg-[#E2F898] text-gray-900 font-black text-xl py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all"
-              >
-                Confirmar
-              </button>
+
+              {showDatePicker ? (
+                <PdvRenderDatePicker
+                  product={product}
+                  saleDate={saleDate}
+                  setSaleDate={(date) => setSaleDate(date)}
+                  setShowDatePicker={setShowDatePicker}
+                  onConfirm={onConfirm}
+                />
+              ) : (
+                <PdvRenderActions
+                  product={product}
+                  isBalcao={isBalcao}
+                  setShowDatePicker={setShowDatePicker}
+                  onConfirm={onConfirm}
+                />
+              )}
             </div>
           </>
         )}

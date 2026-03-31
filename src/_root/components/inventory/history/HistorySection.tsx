@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { type InventoryMovement } from "../../../../services/inventory/inventory.service";
+import { formatDocument } from "../../../../lib/utils";
 
 interface HistorySectionProps {
   title: string;
@@ -22,6 +23,7 @@ export function HistorySection({
   selectedUnit,
 }: HistorySectionProps) {
   const formatDate = (dateString: string) => {
+    console.log("itens", items);
     try {
       return new Intl.DateTimeFormat("pt-BR", {
         day: "2-digit",
@@ -112,15 +114,16 @@ export function HistorySection({
                       <User size={12} className="text-primary" /> Fornecedor
                     </span>
                     <span className="text-foreground font-black truncate max-w-[200px]">
-                      {movement.supplier || "---"}
+                      {movement.supplier.name || "---"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
                     <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                      <FileText size={12} className="text-primary" /> Documento
+                      <FileText size={12} className="text-primary" /> CPF/CNPJ
                     </span>
                     <span className="text-foreground font-black">
-                      {movement.doc || "---"}
+                      {formatDocument(movement.supplier.identification) ||
+                        "---"}
                     </span>
                   </div>
                 </>

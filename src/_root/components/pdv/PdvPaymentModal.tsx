@@ -7,8 +7,9 @@ import {
 } from "../../../components/ui/dialog";
 import { formatMoney, removeMask } from "../../../lib/utils";
 import { costomersService } from "../../../services/costomers/customers.service";
-import { PassBookView } from "./pdvPayment/PassBoolView";
+import { PaymentMethod } from "../../../types/enums";
 import { PaymentMethodsView } from "./pdvPayment/PaymentMethodsView";
+import { PassBookView } from "./pdvPayment/PassBookView";
 
 export interface PdvPaymentModalProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ export interface PdvPaymentModalProps {
   mode?: "pdv" | "payment_only";
   hideFiado?: boolean;
   onConfirm?: (data: {
-    method: string;
+    method: PaymentMethod | string;
     amount: number;
     subtotal: number;
     serviceTax: number;
@@ -42,7 +43,9 @@ export function PdvPaymentModal({
 }: PdvPaymentModalProps) {
   // --- ESTADOS ---
   const [discount, setDiscount] = useState<number>(0);
-  const [activeMethod, setActiveMethod] = useState<string | null>(null);
+  const [activeMethod, setActiveMethod] = useState<
+    PaymentMethod | string | null
+  >(null);
   const [isFiadoMode, setIsFiadoMode] = useState<boolean>(false);
   const [selectedId, setSelectedId] = useState<string | number | null>(null);
   const [receivedAmount, setReceivedAmount] = useState<number>(total);
@@ -77,7 +80,9 @@ export function PdvPaymentModal({
   }, [isOpen]);
 
   // --- LÓGICA DE CONFIRMAÇÃO ---
-  const handleExecuteConfirm = async (methodOverride?: string) => {
+  const handleExecuteConfirm = async (
+    methodOverride?: PaymentMethod | string,
+  ) => {
     const method = methodOverride || activeMethod;
     if (!method || isSubmitting) return;
 
@@ -205,7 +210,7 @@ export function PdvPaymentModal({
                 setIsFiadoMode(false);
                 setSelectedId(null);
               }}
-              onConfirm={() => handleExecuteConfirm("Fiado")}
+              onConfirm={() => handleExecuteConfirm(PaymentMethod.STORE_CREDIT)}
             />
           ) : (
             <PaymentMethodsView

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function parseBrNumber(raw: string, decimals: number): number {
   const digits = raw.replace(/\D/g, "");
@@ -15,11 +15,14 @@ function formatBr(value: number, decimals: number): string {
 
 interface BrInputProps {
   decimals?: number;
-  value: number;
+  value: number | null;
   onChange: (value: number) => void;
   prefix?: string;
   suffix?: string;
   placeholder?: string;
+  className?: string;
+  inputClassName?: string;
+  disabled?: boolean;
 }
 
 export function BrInput({
@@ -29,20 +32,31 @@ export function BrInput({
   prefix,
   suffix,
   placeholder,
+  className,
+  inputClassName,
+  disabled,
 }: BrInputProps) {
   const [display, setDisplay] = useState(
-    value ? formatBr(value, decimals) : ""
+    value !== null && value !== undefined ? formatBr(value, decimals) : ""
   );
+
+  useEffect(() => {
+    if (value !== null && value !== undefined) {
+      setDisplay(formatBr(value, decimals));
+    } else {
+      setDisplay("");
+    }
+  }, [value, decimals]);
 
   function handleInput(e: React.ChangeEvent<HTMLInputElement>) {
     const num = parseBrNumber(e.target.value, decimals);
-    const formatted = num ? formatBr(num, decimals) : "";
-    setDisplay(formatted);
+    const formatted = e.target.value === "" ? "" : formatBr(num, decimals);
+    setDisplay(e.target.value === "" ? "" : formatted);
     onChange(num);
   }
 
   return (
-    <div className="flex items-center h-9 bg-muted border border-border rounded-xl px-3 focus-within:border-foreground/30 focus-within:bg-background transition-all">
+    <div className={className || "flex items-center h-9 bg-muted border border-border rounded-xl px-3 focus-within:border-foreground/30 focus-within:bg-background transition-all"}>
       {prefix && (
         <span className="text-xs font-bold text-muted-foreground mr-1">
           {prefix}
@@ -53,8 +67,9 @@ export function BrInput({
         inputMode="decimal"
         value={display}
         onChange={handleInput}
+        disabled={disabled}
         placeholder={placeholder ?? (decimals === 3 ? "0,000" : "0,00")}
-        className="flex-1 bg-transparent border-none font-bold text-foreground text-sm outline-none"
+        className={inputClassName || "flex-1 bg-transparent border-none font-bold text-foreground text-sm outline-none w-full disabled:opacity-50"}
       />
       {suffix && (
         <span className="text-xs font-bold text-muted-foreground ml-1">

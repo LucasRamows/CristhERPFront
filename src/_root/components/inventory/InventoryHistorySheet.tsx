@@ -19,6 +19,7 @@ import {
   type IngredientResponse,
 } from "../../../services/inventory/inventory.service";
 import { HistorySection } from "./history/HistorySection";
+import { StockAdjustmentSheet } from "./adjustment/Stockadjustmentsheet";
 
 interface InventoryHistorySheetProps {
   item: IngredientResponse | null;
@@ -33,6 +34,7 @@ export function InventoryHistorySheet({
 }: InventoryHistorySheetProps) {
   const [history, setHistory] = useState<InventoryMovement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && item?.id) {
@@ -53,7 +55,10 @@ export function InventoryHistorySheet({
 
   if (!item) return null;
 
-  const isLowStock = item.currentStock <= item.minStock;
+  const currentStock = Number(item.currentStock || 0);
+  const minStock = Number(item.minStock || 0);
+  const hasMinStock = minStock > 0;
+  const isLowStock = hasMinStock && currentStock <= minStock;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -78,10 +83,16 @@ export function InventoryHistorySheet({
                   className={
                     isLowStock
                       ? "bg-destructive/10 text-destructive hover:bg-destructive/20 border-none px-2.5 py-1 text-[9px] font-black tracking-widest"
+                      : !hasMinStock
+                      ? "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border-none px-2.5 py-1 text-[9px] font-black tracking-widest"
                       : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none px-2.5 py-1 text-[9px] font-black tracking-widest"
                   }
                 >
-                  {isLowStock ? "ESTOQUE CRÍTICO" : "ESTOQUE SAUDÁVEL"}
+                  {isLowStock
+                    ? "ESTOQUE CRÍTICO"
+                    : !hasMinStock
+                    ? "SEM MÍNIMO"
+                    : "ESTOQUE SAUDÁVEL"}
                 </Badge>
               </div>
               <h2 className="text-2xl font-black text-foreground tracking-tighter leading-none mb-4 uppercase truncate">
@@ -94,21 +105,31 @@ export function InventoryHistorySheet({
                   </span>
                   <span
                     className={`text-2xl font-black tracking-tighter ${
-                      isLowStock ? "text-destructive" : "text-emerald-500"
+                      isLowStock
+                        ? "text-destructive"
+                        : hasMinStock
+                        ? "text-emerald-500"
+                        : "text-foreground"
                     }`}
                   >
-                    {item.currentStock} <span className="text-xs opacity-40">{item.unit}</span>
+                    {currentStock}{" "}
+                    <span className="text-xs opacity-40">{item.unit}</span>
                   </span>
                 </div>
-                <div className="w-px h-10 bg-border" />
-                <div className="flex flex-col">
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
-                    Mínimo
-                  </span>
-                  <span className="text-2xl font-black text-muted-foreground tracking-tighter">
-                    {item.minStock} <span className="text-xs opacity-40">{item.unit}</span>
-                  </span>
-                </div>
+                {hasMinStock && (
+                  <>
+                    <div className="w-px h-10 bg-border" />
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
+                        Mínimo
+                      </span>
+                      <span className="text-2xl font-black text-muted-foreground tracking-tighter">
+                        {minStock}{" "}
+                        <span className="text-xs opacity-40">{item.unit}</span>
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <button
@@ -139,14 +160,20 @@ export function InventoryHistorySheet({
                 </TabsTrigger>
                 <TabsTrigger
                   value="outputs"
-                  className="flex-1 rounded-xl font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-background data-[state=active]:shadow-sm text-destructive transition-all"
+                  className="flex-1 rounded-xl font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-background data-[state=active]:shadow-sm text-destructive dark:text-destructive-400 transition-all"
                 >
                   Saídas
+                </TabsTrigger>
+                <TabsTrigger
+                  value="adjustments"
+                  className="flex-1 rounded-xl font-bold uppercase text-[10px] tracking-widest data-[state=active]:bg-background data-[state=active]:shadow-sm text-blue-600 dark:text-blue-400 transition-all"
+                >
+                  Balanço
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-8 pb-32 min-h-0 bg-background relative">
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-6 pb-32 min-h-0 bg-background relative">
               {isLoading ? (
                 <div className="h-full flex flex-col items-center justify-center py-12 text-muted-foreground gap-4">
                   <div className="w-10 h-10 border-4 border-primary border-t-transparent animate-spin rounded-full" />
@@ -191,6 +218,44 @@ export function InventoryHistorySheet({
                       items={history.filter((h) => h.type === "OUT")}
                       selectedUnit={item.unit}
                     />
+                  </TabsContent>
+
+                  <TabsContent
+                    value="adjustments"
+                    className="mt-0 space-y-6 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500"
+                  >
+                    {!isAdjustOpen ? (
+                      <div className="flex flex-col items-center justify-center py-10 text-center animate-in fade-in zoom-in-95 duration-500">
+                        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center text-muted-foreground mb-4">
+                          <Package size={32} />
+                        </div>
+                        <h3 className="text-lg font-black text-foreground uppercase tracking-tight mb-2">
+                          Balanço Físico
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider max-w-xs mb-8 leading-relaxed">
+                          O estoque do sistema não bate com o físico? Realize um
+                          ajuste justificando o motivo da quebra ou sobra.
+                        </p>
+                        <button
+                          onClick={() => setIsAdjustOpen(true)}
+                          className="bg-primary text-primary-foreground font-black text-xs px-6 py-4 rounded-2xl uppercase tracking-widest hover:opacity-90 transition-all active:scale-95 shadow-xl shadow-primary/20"
+                        >
+                          Realizar Ajuste de Estoque
+                        </button>
+                      </div>
+                    ) : (
+                      <StockAdjustmentSheet
+                        item={item}
+                        isOpen={isAdjustOpen}
+                        onClose={() => setIsAdjustOpen(false)}
+                        onConfirm={async (adjItem, delta) => {
+                          await inventoryService.balanceStock(
+                            adjItem.id,
+                            delta,
+                          );
+                        }}
+                      />
+                    )}
                   </TabsContent>
                 </>
               )}

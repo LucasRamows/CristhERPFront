@@ -8,7 +8,7 @@ import {
   History,
   Phone,
   ShieldAlert,
-  Trash
+  Trash,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { formatPhone, formatTime } from "../../../lib/utils";
@@ -192,7 +192,8 @@ export function PassbookClientDetailsPanel({
                 disabled={activeClient.saldoDevedor === 0}
                 className="bg-decoration text-decoration-foreground py-3 px-4 md:py-4 md:px-6 rounded-xl md:rounded-2xl font-black text-base md:text-lg flex items-center justify-center gap-2 hover:brightness-105 active:scale-95 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ArrowDownRight size={20} className="md:w-6 md:h-6" /> Receber Valor
+                <ArrowDownRight size={20} className="md:w-6 md:h-6" /> Receber
+                Valor
               </button>
 
               <button
@@ -250,7 +251,11 @@ export function PassbookClientDetailsPanel({
                               <Trash />
                             </Button>
                           </div>{" "}
-                          {formatTime(tx.order.sale_date)}
+                          {formatTime(
+                            tx.order?.sale_date
+                              ? tx.order.sale_date
+                              : tx.createdAt,
+                          )}
                         </div>
 
                         <div className="col-span-1 sm:col-span-5 flex items-center gap-3">

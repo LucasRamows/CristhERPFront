@@ -1,6 +1,7 @@
 import { Package, ShoppingCart, Trash2 } from "lucide-react";
 import { formatMoney } from "../../../../lib/utils";
 import { BrInput } from "../../../../components/ui/BrInput";
+import { InventoryQuantityInput } from "../InventoryQuantityInput";
 
 export interface EntryItem {
   ingredientId: string;
@@ -76,9 +77,8 @@ export function EntryItemsTable({
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <BrInput
-                        suffix={item.unit}
-                        decimals={3}
+                      <InventoryQuantityInput
+                        unit={item.unit}
                         value={item.quantity}
                         onChange={(num) =>
                           updateItem(item.ingredientId, { quantity: num })
@@ -136,20 +136,13 @@ export function EntryItemsTable({
                       <p className="text-[9px] font-black text-muted-foreground uppercase mb-1">
                         Quantidade
                       </p>
-                      <input
-                        type="number"
-                        step="any"
-                        min="0"
-                        value={item.quantity || ""}
-                        onChange={(e) =>
-                          updateItem(item.ingredientId, {
-                            quantity:
-                              e.target.value === ""
-                                ? 0
-                                : Number(e.target.value),
-                          })
+                      <InventoryQuantityInput
+                        unit={item.unit}
+                        value={item.quantity}
+                        onChange={(num) =>
+                          updateItem(item.ingredientId, { quantity: num })
                         }
-                        className="w-full h-9 bg-muted border border-border rounded-xl text-center font-black text-sm outline-none"
+                        inputClassName="w-full h-9 bg-muted border border-border rounded-xl text-center font-black text-sm outline-none"
                       />
                     </div>
                     <div>

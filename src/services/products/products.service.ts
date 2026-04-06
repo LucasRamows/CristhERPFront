@@ -61,7 +61,7 @@ export interface CloseOrderResponse {
 }
 
 export interface ProductsStatsResponse {
-  closedAt: string;
+  sales_date: string;
   quantity: number;
 }
 
@@ -107,7 +107,7 @@ export const productsService = {
     const { data } = await api.patch<ProductsResponse>(
       `/products/${id}/status`,
       { status },
-    );
+    );  
     return data;
   },
 

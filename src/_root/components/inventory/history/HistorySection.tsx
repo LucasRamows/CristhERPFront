@@ -6,6 +6,7 @@ import {
   Hash,
   History,
   User,
+  Scale,
 } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { type InventoryMovement } from "../../../../services/inventory/inventory.service";
@@ -23,7 +24,6 @@ export function HistorySection({
   selectedUnit,
 }: HistorySectionProps) {
   const formatDate = (dateString: string) => {
-    console.log("itens", items);
     try {
       return new Intl.DateTimeFormat("pt-BR", {
         day: "2-digit",
@@ -58,10 +58,14 @@ export function HistorySection({
           key={movement.id}
           className="group relative bg-card border border-border rounded-[24px] p-5 hover:border-primary/20 hover:shadow-xl transition-all duration-300 overflow-hidden"
         >
-          {movement.type === "IN" ? (
+          {movement.type === "IN" ||
+          (movement.type === "BALANCE" && movement.quantity > 0) ? (
             <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
-          ) : (
+          ) : movement.type === "OUT" ||
+            (movement.type === "BALANCE" && movement.quantity < 0) ? (
             <div className="absolute top-0 right-0 w-24 h-24 bg-destructive/5 rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
+          ) : (
+            <div className="absolute top-0 right-0 w-24 h-24 bg-muted rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
           )}
 
           <div className="relative z-10">
@@ -69,12 +73,18 @@ export function HistorySection({
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <div
                   className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-500 ${
-                    movement.type === "IN"
+                    movement.type === "IN" ||
+                    (movement.type === "BALANCE" && movement.quantity > 0)
                       ? "bg-emerald-500/10 text-emerald-500"
-                      : "bg-destructive/10 text-destructive"
+                      : movement.type === "OUT" ||
+                        (movement.type === "BALANCE" && movement.quantity < 0)
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {movement.type === "IN" ? (
+                  {movement.type === "BALANCE" ? (
+                    <Scale size={24} />
+                  ) : movement.type === "IN" ? (
                     <ArrowUpCircle size={24} />
                   ) : (
                     <ArrowDownCircle size={24} />
@@ -82,7 +92,11 @@ export function HistorySection({
                 </div>
                 <div className="min-w-0 flex-1">
                   <h4 className="font-black text-foreground text-lg leading-tight tracking-tight truncate">
-                    {movement.type === "IN"
+                    {movement.type === "BALANCE"
+                      ? movement.quantity > 0
+                        ? `+ ${movement.quantity}`
+                        : `${movement.quantity}`
+                      : movement.type === "IN"
                       ? `+ ${movement.quantity}`
                       : `- ${movement.quantity}`}{" "}
                     <span className="text-[10px] text-muted-foreground font-bold uppercase ml-1 opacity-60">
@@ -97,12 +111,20 @@ export function HistorySection({
               </div>
               <Badge
                 className={`font-black text-[9px] tracking-[0.15em] px-2 py-0.5 border-none shadow-sm shrink-0 whitespace-nowrap ${
-                  movement.type === "IN"
-                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                    : "bg-destructive/10 text-destructive"
+                  movement.type === "IN" ||
+                  (movement.type === "BALANCE" && movement.quantity > 0)
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : movement.type === "OUT" ||
+                      (movement.type === "BALANCE" && movement.quantity < 0)
+                    ? "bg-destructive/10 text-destructive"
+                    : "bg-muted text-muted-foreground"
                 }`}
               >
-                {movement.type === "IN" ? "ENTRADA" : "SAÍDA"}
+                {movement.type === "BALANCE"
+                  ? "BALANÇO"
+                  : movement.type === "IN"
+                  ? "ENTRADA"
+                  : "SAÍDA"}
               </Badge>
             </div>
 
@@ -114,7 +136,7 @@ export function HistorySection({
                       <User size={12} className="text-primary" /> Fornecedor
                     </span>
                     <span className="text-foreground font-black truncate max-w-[200px]">
-                      {movement.supplier.name || "---"}
+                      {movement.supplier?.name || "---"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px]">
@@ -122,22 +144,30 @@ export function HistorySection({
                       <FileText size={12} className="text-primary" /> CPF/CNPJ
                     </span>
                     <span className="text-foreground font-black">
-                      {formatDocument(movement.supplier.identification) ||
-                        "---"}
+                      {movement.supplier?.identification
+                        ? formatDocument(movement.supplier.identification)
+                        : "---"}
                     </span>
                   </div>
                 </>
+              ) : movement.type === "BALANCE" ? (
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
+                    <Scale size={12} className="text-primary" /> Status
+                  </span>
+                  <span className="text-foreground font-black">
+                    Ajuste de Estoque
+                  </span>
+                </div>
               ) : (
-                <>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                      <Hash size={12} className="text-primary" /> Motivo / Ref
-                    </span>
-                    <span className="text-foreground font-black">
-                      {movement.reason || "Consumo de Venda"}
-                    </span>
-                  </div>
-                </>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
+                    <Hash size={12} className="text-primary" /> Motivo / Ref
+                  </span>
+                  <span className="text-foreground font-black">
+                    {movement.reason || "Consumo de Venda"}
+                  </span>
+                </div>
               )}
             </div>
           </div>

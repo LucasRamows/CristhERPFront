@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../components/ui/alert-dialog";
-import type { ProductsResponse } from "../../../services/products/products.service";
+import type { ProductsResponse, ProductsStatsResponse } from "../../../services/products/products.service";
 import { productsService } from "../../../services/products/products.service";
 
 interface RootMenuItemOptionsProps {
@@ -24,6 +24,9 @@ interface RootMenuItemOptionsProps {
   onDeleteClick: () => void;
 }
 
+
+
+
 export default function RootMenuItemOptions({
   item,
   onClose,
@@ -32,7 +35,7 @@ export default function RootMenuItemOptions({
 }: RootMenuItemOptionsProps) {
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [salesData, setSalesData] = useState<any[]>([]);
+  const [salesData, setSalesData] = useState<ProductsStatsResponse[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   // Busca de dados reais do banco para o gráfico
@@ -45,8 +48,8 @@ export default function RootMenuItemOptions({
         // Mapeamos para o formato que o gráfico espera
         const formattedData = stats.map(s => ({
           ...s,
-          name: format(new Date(s.closedAt), "dd/MM", { locale: ptBR }),
-          quantity: Number(s.quantity)
+          sales_date: format(new Date(s.sales_date), "dd/MM", { locale: ptBR }),
+          total: Number(s.quantity)
         }));
         
         setSalesData(formattedData);
@@ -101,7 +104,7 @@ export default function RootMenuItemOptions({
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
-                Desempenho Semanal
+                Desempenho Mensal
               </p>
               <h4 className="text-lg font-black text-zinc-800">
                 Vendas do Item
@@ -131,7 +134,7 @@ export default function RootMenuItemOptions({
                       <stop offset="95%" stopColor="#DCFF79" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="name" hide />
+                  <XAxis dataKey="sales_date" hide />
                   <Tooltip
                     labelStyle={{ color: '#94a3b8' }}
                     contentStyle={{

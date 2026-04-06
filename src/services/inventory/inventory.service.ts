@@ -6,16 +6,13 @@ export interface IngredientResponse {
   unit: string;
   currentStock: number;
   minStock: number;
-  dailyAvgUsage: number;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export interface InventoryMovement {
   id: string;
   createdAt: string;
   quantity: number;
-  type: "IN" | "OUT";
+  type: "IN" | "OUT" | "BALANCE";
   price: number | null;
   reason?: string;
   supplier: {
@@ -95,4 +92,15 @@ export const inventoryService = {
     );
     return data;
   },
+
+  async balanceStock(
+    id: string,
+    delta: number,
+  ): Promise<IngredientResponse> {
+    const { data } = await api.put<IngredientResponse>(
+      `/inventory/${id}/balance-stock`,
+      { delta },
+    );
+    return data;
+  }
 };

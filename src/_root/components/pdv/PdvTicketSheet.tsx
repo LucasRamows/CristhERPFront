@@ -30,7 +30,7 @@ export interface PdvTicketSheetProps {
   activeEntity: PdvEntity | null;
   addClick: (entity: any) => void;
   cart: CartItem[];
-  onCloseEntity: () => void;
+  onCloseEntity: (entity:PdvEntity) => void;
   updateQuantity: (
     uniqueId: string,
     delta: number,
@@ -88,7 +88,7 @@ export function PdvTicketSheet({
               </div>
               <button
                 onClick={() => {
-                  onCloseEntity();
+                  onCloseEntity(activeEntity);
                   handleOpenChange(false);
                 }}
                 className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-100 text-gray-500"

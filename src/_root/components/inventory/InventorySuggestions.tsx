@@ -10,7 +10,7 @@ export function InventorySuggestions({ items, onGenerateQuote }: InventorySugges
   // Calcula a sugestão de compra (Para 7 dias de cobertura)
   const calcularSugestao = (item: IngredientResponse) => {
     const coberturaDesejada = 7; // dias
-    const necessidade = (item.dailyAvgUsage || 0) * coberturaDesejada;
+    const necessidade = (item.currentStock || 0) * coberturaDesejada;
     const sugestao = necessidade - item.currentStock;
     return sugestao > 0 ? Math.ceil(sugestao) : 0;
   };
@@ -46,7 +46,7 @@ export function InventorySuggestions({ items, onGenerateQuote }: InventorySugges
           <div className="flex flex-col bg-white dark:bg-zinc-950">
             {items.map((item) => {
               const sugestao = calcularSugestao(item);
-              const critico = item.currentStock <= (item.dailyAvgUsage || 0) * 2;
+              const critico = item.currentStock <= (item.currentStock || 0) * 2;
 
               return (
                 <div
@@ -92,7 +92,7 @@ export function InventorySuggestions({ items, onGenerateQuote }: InventorySugges
 
                   <div className="col-span-2 text-center flex flex-col">
                     <span className="font-black text-zinc-900 dark:text-zinc-300 text-xl tracking-tighter">
-                      {item.dailyAvgUsage}
+                      {/* {item.dailyAvgUsage} */}
                     </span>
                     <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{item.unit}/dia</span>
                   </div>

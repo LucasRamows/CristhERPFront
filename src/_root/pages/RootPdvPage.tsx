@@ -326,7 +326,10 @@ export default function RootPdvPage() {
           onOpenChange={setCartMobileOpen}
           activeEntity={activeEntity as any}
           cart={cart as any}
-          onCloseEntity={() => setActiveEntity(null)}
+          onCloseEntity={(entity) => {
+            setActiveEntity(null);
+            setActiveView(entity?.orderType === "CARD" ? "comandas" : "mesas");
+          }}
           addClick={actions.handleAddClick}
           updateQuantity={actions.updateQuantity}
           includeService={includeService}

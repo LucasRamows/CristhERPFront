@@ -274,7 +274,9 @@ export const usePdvActions = (
 
         setOpenOrders((prev) => prev.filter((o) => o.id !== activeEntity.id));
 
+        const targetView = activeEntity.orderType === "CARD" ? "comandas" : "mesas";
         setActiveEntity(null);
+        setActiveView(targetView);
         setCartMobileOpen(false);
       } catch (error) {
         console.error("Erro ao finalizar pagamento no servidor:", error);
@@ -287,6 +289,7 @@ export const usePdvActions = (
       setIsSyncing,
       setOpenOrders,
       setActiveEntity,
+      setActiveView,
       setCartMobileOpen,
     ],
   );

@@ -22,7 +22,7 @@ export function PageTabNavigation({
 }: PageTabNavigationProps) {
   return (
     <div
-      className={`flex h-12 md:h-14 w-fit items-center justify-center rounded-full bg-card p-1 md:p-1.5 text-primary overflow-x-auto hide-scrollbar ${className}`}
+      className={`flex h-12 md:h-14 w-fit items-center justify-center rounded-xl bg-card p-1 md:p-1.5 text-primary overflow-x-auto hide-scrollbar ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
@@ -32,7 +32,7 @@ export function PageTabNavigation({
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`inline-flex h-full items-center justify-center whitespace-nowrap rounded-full px-5 md:px-6 text-sm md:text-base font-bold transition-all ${
+            className={`inline-flex h-full items-center justify-center whitespace-nowrap rounded-xl px-5 md:px-6 text-sm md:text-base font-bold transition-all ${
               isActive
                 ? `${activeBg} text-gray-900 shadow-sm`
                 : "hover:text-gray-900 flex-1"

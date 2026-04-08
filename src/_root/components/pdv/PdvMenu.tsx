@@ -1,29 +1,25 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
-import LoadingComponent from "../../../components/shared/LoadingComponent";
+import { SearhListPicker } from "../../../components/shared/SearhListPicker";
+import { Button } from "../../../components/ui/button";
 import {
   productsService,
   type ProductsResponse,
 } from "../../../services/products/products.service";
-import { ProductCard } from "../menu/MenuProductCard";
 import type { PdvEntity } from "../../types/PdvEntity";
-import { SearhListPicker } from "../../../components/shared/SearhListPicker";
-import { Avatar, AvatarFallback } from "@radix-ui/react-avatar";
-
-export interface PdvMenuCategory {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-}
+import {
+  CategoryProductSelector,
+  type Category,
+} from "../../../components/shared/CategoryFilter";
+import LoadingComponent from "../../../components/shared/LoadingComponent";
 
 export interface PdvMenuProps {
   activeEntity?: PdvEntity | null;
   setActiveView?: (view: string) => void;
-  selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
-  categories: PdvMenuCategory[];
+  categories: Category[];
   addToCart?: (product: ProductsResponse) => void;
   onProductClick?: (product: ProductsResponse) => void;
+  onAddProductClick?: () => void;
   products?: ProductsResponse[];
   isLoading?: boolean;
   setAllProducts?: (products: ProductsResponse[]) => void;
@@ -32,76 +28,68 @@ export interface PdvMenuProps {
 export function PdvMenu({
   activeEntity,
   setActiveView,
-  selectedCategory,
-  setSelectedCategory,
   categories,
   addToCart,
   onProductClick,
+  onAddProductClick,
   products: externalProducts,
-  isLoading: externalLoading,
   setAllProducts,
 }: PdvMenuProps) {
   const [internalProducts, setInternalProducts] = useState<ProductsResponse[]>(
     [],
   );
-  const [internalLoading, setInternalLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (externalProducts) return;
-
+    if (externalProducts) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
     const fetchProducts = async () => {
       try {
-        setInternalLoading(true);
         const data = await productsService.getProductsActive();
         setInternalProducts(data);
         setAllProducts?.(data);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
       } finally {
-        setInternalLoading(false);
+        setIsLoading(false);
       }
     };
     fetchProducts();
   }, [externalProducts]);
 
   const products = externalProducts || internalProducts;
-  const isLoading =
-    externalLoading !== undefined ? externalLoading : internalLoading;
-
-  const categoriesWithProducts = new Set(products.map((p) => p.category));
-  const visibleCategories = categories.filter(
-    (cat) =>
-      cat.id === "Todos" ||
-      cat.id === "TODOS" ||
-      categoriesWithProducts.has(cat.id),
-  );
-
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
   return (
     <div className="flex flex-col h-full animate-fade-in">
-      <div className="mb-6">
-        <SearhListPicker
-          items={products}
-          onSelect={(item) => onProductClick?.(item)}
-          placeholder="Buscar produto por nome, código ou categoria..."
-          searchKeys={["name", "code", "category"]}
-          renderItem={(item) => (
-            <div className="flex items-center gap-2 py-1">
-              <Avatar className="h-9 w-9 border border-gray-100 rounded-full flex items-center justify-center bg-gray-50 overflow-hidden">
-                <AvatarFallback className="font-bold text-xs text-primary">
-                  {item.name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="font-bold text-sm text-zinc-800">
-                  {item.name}
-                </span>
-                <span className="text-[10px] text-zinc-500 font-medium uppercase">
-                  {item.category} • R$ {Number(item.price).toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
-        />
+      <div className="mb-6 flex gap-2">
+        <div className="flex-1 w-full">
+          <SearhListPicker
+            items={products}
+            onSelect={(item) => onProductClick?.(item)}
+            placeholder="Buscar produto por nome, código ou categoria..."
+            searchKeys={["name", "code", "category"]}
+            avatarText={(item) => item.name.charAt(0).toUpperCase()}
+            renderTitle={(item) => item.name}
+            renderSubtitle={(item) =>
+              `${
+                typeof item.category === "object"
+                  ? item.category?.name
+                  : item.category
+              } • R$ ${Number(item.price).toFixed(2)}`
+            }
+          />
+        </div>
+        {onAddProductClick && (
+          <Button onClick={onAddProductClick}>
+            <Plus size={20} />
+            <span>Adicionar</span>
+          </Button>
+        )}
       </div>
       {activeEntity &&
         (activeEntity.orderType === "TABLE" ||
@@ -120,58 +108,18 @@ export function PdvMenu({
           </button>
         )}
 
-      {/* Categorias */}
-      <div className="flex flex-wrap gap-3 mb-6 overflow-x-auto pb-2 custom-scrollbar shrink-0 no-scrollbar">
-        {visibleCategories.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setSelectedCategory(cat.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold text-base whitespace-nowrap transition-all border-2 ${
-              selectedCategory === cat.id
-                ? "bg-gray-900 border-gray-900 text-white shadow-md"
-                : "bg-white border-transparent text-gray-600 hover:border-gray-200"
-            }`}
-          >
-            {cat.icon} {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Lista de Produtos */}
-      {isLoading ? (
-        <LoadingComponent />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-          {products
-            .filter(
-              (p) =>
-                selectedCategory === "Todos" ||
-                selectedCategory === "TODOS" ||
-                p.category === selectedCategory,
-            )
-            .map((product) => (
-              <ProductCard
-                key={product.id}
-                item={product}
-                icon={
-                  (
-                    categories.find((cat) => cat.id === product.category) || {
-                      icon: null,
-                    }
-                  ).icon
-                }
-                formatMoney={(val) => `R$ ${val.toFixed(2)}`}
-                onClick={(item) => {
-                  if (onProductClick) {
-                    onProductClick(item);
-                  } else if (addToCart) {
-                    addToCart(item);
-                  }
-                }}
-              />
-            ))}
-        </div>
-      )}
+      {/* Categorias e Produtos */}
+      <CategoryProductSelector
+        categories={categories}
+        products={products}
+        onProductSelect={(item) => {
+          if (onProductClick) {
+            onProductClick(item);
+          } else if (addToCart) {
+            addToCart(item);
+          }
+        }}
+      />
     </div>
   );
 }

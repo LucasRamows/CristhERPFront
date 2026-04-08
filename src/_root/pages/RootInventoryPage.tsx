@@ -1,8 +1,4 @@
-import {
-  FileText,
-  History,
-  LayoutGrid
-} from "lucide-react";
+import { FileText, History, LayoutGrid } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import LoadingComponent from "../../components/shared/LoadingComponent";
@@ -12,7 +8,7 @@ import {
 } from "../../components/shared/PageTabNavigation";
 import {
   inventoryService,
-  type IngredientResponse
+  type IngredientResponse,
 } from "../../services/inventory/inventory.service";
 import InventoryEntryPage from "../components/inventory/EntryPage";
 import { InventorySuggestions } from "../components/inventory/InventorySuggestions";
@@ -47,7 +43,9 @@ export default function SupplyManagementPage() {
   const [activeView, setActiveView] = useState("estoque");
   const [ingredients, setIngredients] = useState<IngredientResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [xmlState, setXmlState] = useState<"idle" | "uploading" | "success">("idle");
+  const [xmlState, setXmlState] = useState<"idle" | "uploading" | "success">(
+    "idle",
+  );
 
   const fetchIngredients = async () => {
     try {
@@ -93,12 +91,11 @@ export default function SupplyManagementPage() {
       />
 
       {isLoading && <LoadingComponent />}
-      
+
       {/* WRAPPER PRINCIPAL */}
       <div className="flex flex-col h-full w-full overflow-hidden bg-card rounded-2xl">
         {/* ÁREA DE CONTEÚDO DINÂMICO */}
         <div className="flex-1 overflow-y-auto bg-card relative custom-scrollbar">
-          
           {/* VISÃO 1: ESTOQUE (NOVA) */}
           {activeView === "estoque" && !isLoading && (
             <InventoryTable items={ingredients} />
@@ -106,16 +103,16 @@ export default function SupplyManagementPage() {
 
           {/* VISÃO 2: SUGESTÃO DE COMPRAS */}
           {activeView === "sugestoes" && !isLoading && (
-            <InventorySuggestions 
-              items={ingredients} 
+            <InventorySuggestions
+              items={ingredients}
               onGenerateQuote={() => setActiveView("cotacao")}
             />
           )}
 
           {/* VISÃO 3: COTAÇÃO INTELIGENTE */}
           {activeView === "cotacao" && (
-            <SmartQuote 
-              items={MOCK_COTACAO} 
+            <SmartQuote
+              items={MOCK_COTACAO}
               onGenerateOrders={() => {
                 toast.success("Pedidos de compra gerados com sucesso!");
                 setActiveView("estoque");
@@ -125,7 +122,7 @@ export default function SupplyManagementPage() {
 
           {/* VISÃO 4: ENTRADA DE XML */}
           {activeView === "xml" && (
-            <XmlImport 
+            <XmlImport
               xmlState={xmlState}
               onFileUpload={handleFileUpload}
               onCancel={() => setXmlState("idle")}
@@ -138,9 +135,7 @@ export default function SupplyManagementPage() {
           )}
 
           {/* VISÃO 5: ENTRADA MANUAL */}
-          {activeView === "manual_entry" && (
-            <InventoryEntryPage />
-          )}
+          {activeView === "manual_entry" && <InventoryEntryPage />}
         </div>
       </div>
     </div>

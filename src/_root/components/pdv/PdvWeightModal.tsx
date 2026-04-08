@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { CalendarIcon, Scale, X } from "lucide-react";
+import { CalendarIcon, Scale, X, Clock } from "lucide-react";
+import { Tooltip } from "@radix-ui/react-tooltip";
+import { TooltipContent, TooltipTrigger } from "../../../components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +17,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "../../../components/ui/popover";
+import { BrInput } from "../../../components/ui/BrInput";
 
 export interface PdvWeightModalProps {
   product: SelectedProductForObs | null;
@@ -29,7 +32,7 @@ export function PdvWeightModal({
   onConfirm,
   activeEntity,
 }: PdvWeightModalProps) {
-  const [weightInput, setWeightInput] = useState("");
+  const [weight, setWeight] = useState(0);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saleDate, setSaleDate] = useState<Date | undefined>();
 
@@ -37,12 +40,17 @@ export function PdvWeightModal({
     activeEntity?.id === "caixa_balcao" ||
     activeEntity?.orderType === "COUNTER";
 
-  const weightKg = parseFloat(weightInput.replace(",", ".")) || 0;
-  const totalPrice = weightKg * Number(product?.price || 0);
-  const isValid = weightKg > 0;
+  const isRetroactive = Boolean(
+    activeEntity?.sale_date &&
+      new Date(activeEntity.sale_date).setHours(0, 0, 0, 0) <
+        new Date().setHours(0, 0, 0, 0),
+  );
+
+  const totalPrice = weight * Number(product?.price || 0);
+  const isValid = weight > 0;
 
   const handleClose = () => {
-    setWeightInput("");
+    setWeight(0);
     setShowDatePicker(false);
     setSaleDate(undefined);
     onClose();
@@ -55,27 +63,16 @@ export function PdvWeightModal({
         ...product,
         price: totalPrice,
         quantity: 1,
-        obs: [`${weightKg.toFixed(3)} kg`],
+        obs: [`${weight.toFixed(3)} kg`],
       },
       {
         saleDate: overrideDate ? overrideDate : new Date(),
       },
     );
-    setWeightInput("");
+    setWeight(0);
     setShowDatePicker(false);
     setSaleDate(undefined);
   };
-
-  // Teclado numérico
-  const handleKey = (key: string) => {
-    setWeightInput((prev) => {
-      if (key === "⌫") return prev.slice(0, -1);
-      if (key === "," && prev.includes(",")) return prev;
-      return prev + key;
-    });
-  };
-
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", ",", "0", "⌫"];
 
   return (
     <Dialog
@@ -114,19 +111,22 @@ export function PdvWeightModal({
             </div>
 
             {/* Display do peso e valor */}
-            <div className="px-6 pt-6 pb-2 flex flex-col items-center gap-1">
-              <div className="w-full bg-gray-50 rounded-[20px] p-5 text-center">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">
-                  Peso Informado
+            <div className="px-6 pt-6 pb-2 flex flex-col items-center gap-3">
+              <div className="w-full">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">
+                  Peso Informado (kg)
                 </p>
-                <p className="text-5xl font-black text-gray-900 tracking-tight">
-                  {weightInput || "0"}{" "}
-                  <span className="text-2xl text-gray-400">kg</span>
-                </p>
+                <BrInput
+                  value={weight}
+                  onChange={setWeight}
+                  decimals={3}
+                  className="w-full h-24 bg-gray-50 rounded-[20px] border-none flex justify-center items-center text-center px-4"
+                  inputClassName="text-5xl font-black text-gray-900 bg-transparent text-center outline-none w-full"
+                />
               </div>
 
               {isValid && (
-                <div className="w-full mt-3 bg-[#E2F898]/40 rounded-[16px] p-4 text-center">
+                <div className="w-full bg-[#E2F898]/40 rounded-[16px] p-4 text-center mt-2">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
                     Valor Total
                   </p>
@@ -134,32 +134,34 @@ export function PdvWeightModal({
                     R$ {totalPrice.toFixed(2)}
                   </p>
                   <p className="text-xs text-gray-400 font-medium mt-1">
-                    {weightKg.toFixed(3)} kg × R${" "}
+                    {weight.toFixed(3)} kg × R${" "}
                     {Number(product.price).toFixed(2)}
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Teclado numérico */}
-            <div className="px-6 pb-2 pt-4 grid grid-cols-3 gap-2">
-              {keys.map((key) => (
-                <button
-                  key={key}
-                  onClick={() => handleKey(key)}
-                  className={`h-14 rounded-[16px] font-black text-xl transition-all active:scale-95 ${
-                    key === "⌫"
-                      ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                      : "bg-gray-50 text-gray-900 hover:bg-gray-100"
-                  }`}
-                >
-                  {key}
-                </button>
-              ))}
-            </div>
-
             {/* Botão confirmar e Retroativa */}
-            <div className="p-6 pt-3 flex flex-col gap-3">
+            <div className="p-6 pt-3 flex flex-col gap-3 border-t border-gray-100">
+              {isBalcao && !showDatePicker && !isRetroactive && (
+                <div className="flex items-end justify-end">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setShowDatePicker(true)}
+                      >
+                        <Clock size={18} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Adicionar data retroativa</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              )}
+
               {showDatePicker ? (
                 <div className="flex flex-col gap-4 animate-fade-in bg-white p-4 rounded-[20px] border border-gray-100 shadow-sm">
                   <span className="text-sm font-bold text-gray-700 text-center">
@@ -187,6 +189,8 @@ export function PdvWeightModal({
                         mode="single"
                         selected={saleDate}
                         onSelect={setSaleDate}
+                        disabled={{ after: new Date() }}
+                        locale={ptBR}
                         initialFocus
                       />
                     </PopoverContent>
@@ -209,24 +213,13 @@ export function PdvWeightModal({
                   </div>
                 </div>
               ) : (
-                <>
-                  <button
-                    disabled={!isValid}
-                    onClick={() => handleConfirm()}
-                    className="w-full bg-[#E2F898] text-gray-900 font-black text-xl py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Confirmar — R$ {totalPrice.toFixed(2)}
-                  </button>
-
-                  {isBalcao && isValid && (
-                    <button
-                      onClick={() => setShowDatePicker(true)}
-                      className="w-full bg-gray-100 text-gray-700 font-bold text-lg py-4 rounded-2xl border border-gray-200 hover:bg-gray-200 active:scale-[0.97] transition-all"
-                    >
-                      Lançar Venda Retroativa
-                    </button>
-                  )}
-                </>
+                <button
+                  disabled={!isValid}
+                  onClick={() => handleConfirm()}
+                  className="w-full bg-[#E2F898] text-gray-900 font-black text-xl py-4 rounded-2xl hover:brightness-95 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Confirmar — R$ {totalPrice.toFixed(2)}
+                </button>
               )}
             </div>
           </>

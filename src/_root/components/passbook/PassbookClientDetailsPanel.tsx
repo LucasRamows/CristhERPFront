@@ -220,6 +220,7 @@ export function PassbookClientDetailsPanel({
               </h3>
 
               <div className="card-default overflow-hidden">
+                {/* Header — só desktop */}
                 <div className="hidden sm:grid grid-cols-12 gap-4 p-4 md:p-6 border-b border-border bg-muted/50 text-muted-foreground font-bold text-sm uppercase tracking-wider">
                   <div className="col-span-3">Data / Hora</div>
                   <div className="col-span-5">Descrição</div>
@@ -232,33 +233,34 @@ export function PassbookClientDetailsPanel({
                     transactions.map((tx) => (
                       <div
                         key={tx.id}
-                        className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 p-4 md:p-6 items-center border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                        className="flex flex-col sm:grid sm:grid-cols-12 gap-3 sm:gap-4 p-4 md:p-6 border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                       >
-                        <div className="col-span-1 flex items-center justify-between sm:col-span-3 text-sm font-bold text-muted-foreground">
-                          <div className="col-span-1">
-                            <Button
-                              variant="destructive"
-                              size="icon"
-                              className=""
-                              onClick={() =>
-                                handleDeleteTransaction(
-                                  tx.id,
-                                  tx.orderId,
-                                  tx.type,
-                                )
-                              }
-                            >
-                              <Trash />
-                            </Button>
-                          </div>{" "}
-                          {formatTime(
-                            tx.order?.sale_date
-                              ? tx.order.sale_date
-                              : tx.createdAt,
-                          )}
+                        {/* Linha 1 mobile: botão delete + data */}
+                        <div className="flex items-center justify-between sm:col-span-3">
+                          <Button
+                            variant="destructive"
+                            size="icon"
+                            onClick={() =>
+                              handleDeleteTransaction(
+                                tx.id,
+                                tx.orderId,
+                                tx.type,
+                              )
+                            }
+                          >
+                            <Trash />
+                          </Button>
+                          <span className="text-sm font-bold text-muted-foreground">
+                            {formatTime(
+                              tx.order?.sale_date
+                                ? tx.order.sale_date
+                                : tx.createdAt,
+                            )}
+                          </span>
                         </div>
 
-                        <div className="col-span-1 sm:col-span-5 flex items-center gap-3">
+                        {/* Descrição */}
+                        <div className="flex items-center gap-3 sm:col-span-5">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                               tx.type === "DEBT"
@@ -277,19 +279,21 @@ export function PassbookClientDetailsPanel({
                           </span>
                         </div>
 
-                        <div className="col-span-1 sm:col-span-2 sm:text-center text-sm font-semibold text-muted-foreground">
-                          {tx.operatorId ? "Sistema" : "Manual"}
-                        </div>
-
-                        <div
-                          className={`col-span-1 sm:col-span-2 text-left sm:text-right font-black text-lg ${
-                            tx.type === "DEBT"
-                              ? "text-destructive"
-                              : "text-green-500"
-                          }`}
-                        >
-                          {tx.type === "DEBT" ? "+" : "-"} R${" "}
-                          {Number(tx.amount).toFixed(2)}
+                        {/* Operador + Valor — lado a lado no mobile, colunas separadas no desktop */}
+                        <div className="flex items-center justify-between sm:contents">
+                          <span className="text-sm font-semibold text-muted-foreground sm:col-span-2 sm:text-center">
+                            {tx.operatorId ? "Sistema" : "Manual"}
+                          </span>
+                          <span
+                            className={`font-black text-lg sm:col-span-2 sm:text-right ${
+                              tx.type === "DEBT"
+                                ? "text-destructive"
+                                : "text-green-500"
+                            }`}
+                          >
+                            {tx.type === "DEBT" ? "+" : "-"} R${" "}
+                            {Number(tx.amount).toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     ))

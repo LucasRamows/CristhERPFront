@@ -1,6 +1,12 @@
 import { Card } from "../../../components/ui/card";
 
-export const DashboardStatCard = ({ title, value, trend, icon, color }: any) => {
+export const DashboardStatCard = ({
+  title,
+  value,
+  trend,
+  icon,
+  color,
+}: any) => {
   const colors: any = {
     emerald: "bg-emerald-50 text-emerald-600",
     blue: "bg-blue-50 text-blue-600",
@@ -11,7 +17,7 @@ export const DashboardStatCard = ({ title, value, trend, icon, color }: any) => 
   return (
     <Card className="p-6 bg-card">
       <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-2xl ${colors[color]}`}>{icon}</div>
+        <div className={`p-3 ${colors[color]}`}>{icon}</div>
         <div>
           <p className="text-xs font-bold text-primary uppercase tracking-wider">
             {title}

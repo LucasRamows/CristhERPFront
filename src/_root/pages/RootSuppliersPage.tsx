@@ -1,17 +1,12 @@
-import {
-  History as HistoryIcon,
-  Plus,
-  Users
-} from "lucide-react";
+import { History as HistoryIcon, Plus, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import LoadingComponent from "../../components/shared/LoadingComponent";
 import { SearhListPicker } from "../../components/shared/SearhListPicker";
-import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Button } from "../../components/ui/button";
 import {
   suppliersService,
-  type SupplierResponse
+  type SupplierResponse,
 } from "../../services/suppliers/suppliers.service";
 import { DashboardStatCard } from "../components/dashboard/DashboardStatCard";
 import { SupplierCard } from "../components/supplier/SupplierCard";
@@ -91,27 +86,12 @@ export default function RootSuppliersPage() {
             onSelect={(item) => setSearchTerm(item.name)}
             placeholder="Buscar produto por nome, código ou categoria..."
             searchKeys={["name", "identification"]}
-            renderItem={(item) => (
-              <div className="flex items-center gap-2 py-1">
-                <Avatar className="h-9 w-9 border border-gray-100 rounded-full flex items-center justify-center bg-gray-50 overflow-hidden">
-                  <AvatarFallback className="font-bold text-xs text-primary">
-                    {item.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <span className="font-bold text-sm text-zinc-800">
-                    {item.name}
-                  </span>
-                  <span className="text-[10px] text-zinc-500 font-medium uppercase">
-                    {item.category} • {item.identification}
-                  </span>
-                </div>
-              </div>
-            )}
+            avatarText={(item) => item.name.charAt(0).toUpperCase()}
+            renderTitle={(item) => item.name}
+            renderSubtitle={(item) => item.identification}
           />
         </div>
         <Button
-          className="h-[52px] px-6 rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all flex items-center gap-2"
           onClick={() => {
             setIsCreateSheetOpen(true);
           }}

@@ -1,5 +1,6 @@
 import { Ban, CheckCircle, ChevronLeft, Trash, User } from "lucide-react";
 import { SearhListPicker } from "../../../../components/shared/SearhListPicker";
+import { formatDocument } from "../../../../lib/utils";
 
 interface FiadoViewProps {
   clients: any[];
@@ -47,9 +48,17 @@ export function PassBookView({
             <div className="flex items-center gap-3">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 
-                ${selectedClient.isBlocked ? "bg-red-50 text-red-500" : "bg-white text-[#44A08D] shadow-sm"}`}
+                ${
+                  selectedClient.isBlocked
+                    ? "bg-red-50 text-red-500"
+                    : "bg-white text-[#44A08D] shadow-sm"
+                }`}
               >
-                {selectedClient.isBlocked ? <Ban size={18} /> : <User size={18} />}
+                {selectedClient.isBlocked ? (
+                  <Ban size={18} />
+                ) : (
+                  <User size={18} />
+                )}
               </div>
               <div>
                 <h4 className="text-sm font-bold text-zinc-800 flex items-center gap-2">
@@ -61,11 +70,11 @@ export function PassBookView({
                   )}
                 </h4>
                 <p className="text-[11px] text-zinc-500 font-medium leading-none mt-1">
-                  {selectedClient.nickname} • {selectedClient.cpf}
+                  {selectedClient.nickname} • {formatDocument(selectedClient.cpf)}
                 </p>
               </div>
             </div>
-            <button 
+            <button
               onClick={onRemoveSelection}
               className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors"
             >
@@ -90,17 +99,32 @@ export function PassBookView({
                 searchKeys={["fullName", "nickname", "cpf"]}
                 renderItem={(client) => (
                   <div className="flex items-center gap-3 py-1">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 
-                      ${client.isBlocked ? "bg-red-50 text-red-500" : "bg-gray-100 text-zinc-500"}`}
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 
+                      ${
+                        client.isBlocked
+                          ? "bg-red-50 text-red-500"
+                          : "bg-gray-100 text-zinc-500"
+                      }`}
                     >
-                      {client.isBlocked ? <Ban size={18} /> : <User size={18} />}
+                      {client.isBlocked ? (
+                        <Ban size={18} />
+                      ) : (
+                        <User size={18} />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-bold text-zinc-800 flex items-center gap-2 truncate">
                         {client.fullName}
-                        {client.isBlocked && <span className="text-[8px] bg-red-500 text-white px-1 rounded">BLOQ</span>}
+                        {client.isBlocked && (
+                          <span className="text-[8px] bg-red-500 text-white px-1 rounded">
+                            BLOQ
+                          </span>
+                        )}
                       </h4>
-                      <p className="text-[10px] text-zinc-500 font-medium truncate">{client.cpf}</p>
+                      <p className="text-[10px] text-zinc-500 font-medium truncate">
+                        {formatDocument(client.cpf)}
+                      </p>
                     </div>
                   </div>
                 )}

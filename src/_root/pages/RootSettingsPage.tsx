@@ -1,152 +1,177 @@
-import { Bell, LayoutGrid, Moon, Palette, Sun } from "lucide-react";
+import { Layers, Tags } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "../../components/ui/button";
 import { useAuthenticatedUser } from "../../contexts/DataContext";
 import { restaurantService } from "../../services/restaurant/restaurant.service";
-import { useTheme } from "../../contexts/ThemeContext";
+
+import { ClassCreationSheet } from "../components/settings/ClassCreationSheet";
+import { SettingsAppearanceCard } from "../components/settings/SettingsAppearanceCard";
+import {
+  SettingsDataClassesCard,
+  type ClassItem,
+} from "../components/settings/SettingsDataClassesCard";
+import { SettingsSaleModesCard } from "../components/settings/SettingsSaleModesCard";
+import { TableSettingsSheet } from "../components/settings/TableSettingsSheet";
 
 const RootSettingsPage: React.FC = () => {
   const { data: user, refreshData } = useAuthenticatedUser();
-  const [themeToggle, setThemeToggle] = useState(false);
+
+  // ==========================================
+  // ESTADOS (APARÊNCIA E SISTEMA)
+  // ==========================================
   const [receiveNotifications, setReceiveNotifications] = useState(true);
-  const [totalTables, setTotalTables] = useState(
+
+  // ==========================================
+  // ESTADOS (MESAS E TIPOS DE VENDA)
+  // ==========================================
+  const [initialTables, setInitialTables] = useState(
     user?.restaurant?.totalTables || 10,
   );
-  const [isSaving, setIsSaving] = useState(false);
-  const { toggleTheme } = useTheme();
-  const onThemeChange = () => {
-    setThemeToggle((prev) => !prev);
-    toggleTheme();
-  };
+  const [isTableDrawerOpen, setIsTableDrawerOpen] = useState(false);
+  const [isSavingTables, setIsSavingTables] = useState(false);
 
-  // Sincronizar estado local se o usuário mudar externamente
+  const [saleModes, setSaleModes] = useState({
+    mesas: true,
+    comandas: false,
+    caixaRapido: true,
+  });
+
+  // Sync initial tables if user data changes
   useEffect(() => {
     if (user?.restaurant?.totalTables) {
-      setTotalTables(user.restaurant.totalTables);
+      setInitialTables(user.restaurant.totalTables);
     }
   }, [user?.restaurant?.totalTables]);
 
-  const handleSaveTables = async () => {
+  const handleSaveTables = async (newTotalTables: number) => {
     try {
-      setIsSaving(true);
-      await restaurantService.updateTables(totalTables);
-      await refreshData();
-      toast.success("Quantidade de mesas atualizada!");
+      setIsSavingTables(true);
+      await restaurantService.updateTables(newTotalTables);
+      await refreshData(); // refresh contexts
+      setInitialTables(newTotalTables); // optimistically update
+      setIsTableDrawerOpen(false);
+      toast.success("Quantidade de mesas atualizada com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar mesas:", error);
       toast.error("Erro ao atualizar mesas. Tente novamente.");
     } finally {
-      setIsSaving(false);
+      setIsSavingTables(false);
+    }
+  };
+
+  // ==========================================
+  // ESTADOS (CLASSES)
+  // ==========================================
+  const [productClasses, setProductClasses] = useState<ClassItem[]>(
+    user?.restaurant?.ProductCategories || [],
+  );
+
+  const [supplierClasses, setSupplierClasses] = useState<ClassItem[]>(
+    user?.restaurant?.SupplierCategories || [],
+  );
+
+  const [isClassDrawerOpen, setIsClassDrawerOpen] = useState(false);
+  const [activeClassType, setActiveClassType] = useState<
+    "product" | "supplier"
+  >("product");
+
+  const openClassDrawer = (type: "product" | "supplier") => {
+    setActiveClassType(type);
+    setIsClassDrawerOpen(true);
+  };
+
+  const handleSaveClass = async (name: string, type: "product" | "supplier") => {
+    try {
+      if (type === "product") {
+         const newClass = await restaurantService.createProductCategory(name);
+         setProductClasses((prev) => [...prev, { ...newClass, _count: { products: 0, suppliers: 0 } }]);
+      } else {
+         const newClass = await restaurantService.createSupplierCategory(name);
+         setSupplierClasses((prev) => [...prev, { ...newClass, _count: { products: 0, suppliers: 0 } }]);
+      }
+      await refreshData();
+      toast.success("Classe criada com sucesso!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Erro ao criar classe.");
+    }
+  };
+
+  const handleDeleteClass = async (id: string, type: "product" | "supplier") => {
+    try {
+      if (type === "product") {
+         await restaurantService.deleteProductCategory(id);
+         setProductClasses((prev) => prev.filter((c) => c.id !== id));
+      } else {
+         await restaurantService.deleteSupplierCategory(id);
+         setSupplierClasses((prev) => prev.filter((c) => c.id !== id));
+      }
+      await refreshData();
+      toast.success("Classe deletada com sucesso!");
+    } catch (error) {
+       console.error(error);
+       toast.error("Erro ao deletar classe.");
     }
   };
 
   return (
-    <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
-      {/* Tema */}
-      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <Palette size={20} className="text-primary" />
-          <h3 className="uppercase text-lg">Tema</h3>
-        </div>
+    <div className="flex flex-col h-full animate-fade-in">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+        {/* CARD 1: PREFERÊNCIAS DO SISTEMA */}
+        <SettingsAppearanceCard
+          receiveNotifications={receiveNotifications}
+          setReceiveNotifications={setReceiveNotifications}
+        />
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-            Mudar tema
-          </span>
-          <button
-            onClick={onThemeChange}
-            className={`w-14 h-8 rounded-full transition-all relative flex items-center ${
-              themeToggle ? "bg-primary" : "bg-secondary"
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all flex items-center justify-center ${
-                themeToggle ? "left-7" : "left-1"
-              }`}
-            >
-              {themeToggle ? (
-                <Moon size={14} className="text-gray-800" />
-              ) : (
-                <Sun size={14} className="text-yellow-500" />
-              )}
-            </div>
-          </button>
-        </div>
-      </section>
+        {/* CARD 2: TIPOS DE VENDA */}
+        <SettingsSaleModesCard
+          saleModes={saleModes}
+          setSaleModes={setSaleModes}
+          totalTables={initialTables}
+          openTableDrawer={() => setIsTableDrawerOpen(true)}
+        />
 
-      {/* Notificações */}
-      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <Bell size={20} className="text-primary" />
-          <h3 className="uppercase text-lg">Alertas e Avisos</h3>
-        </div>
+        {/* CARD 3: CLASSES DE PRODUTOS */}
+        <SettingsDataClassesCard
+          title="Classes de Produtos"
+          icon={Tags}
+          emptyIcon={Tags}
+          emptyText="Nenhuma classe de produto"
+          countSuffix="itens vinculados"
+          classes={productClasses}
+          onOpenDrawer={() => openClassDrawer("product")}
+          onDeleteClass={async (id) => handleDeleteClass(id, "product")}
+        />
 
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
-            Receber avisos no sistema
-          </span>
-          <button
-            onClick={() => setReceiveNotifications(!receiveNotifications)}
-            className={`w-14 h-8 rounded-full transition-all relative ${
-              receiveNotifications ? "bg-primary" : "bg-secondary"
-            }`}
-          >
-            <div
-              className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${
-                receiveNotifications ? "left-7" : "left-1"
-              }`}
-            />
-          </button>
-        </div>
-      </section>
+        {/* CARD 4: CLASSES DE FORNECEDORES */}
+        <SettingsDataClassesCard
+          title="Classes de Fornec."
+          icon={Layers}
+          emptyIcon={Layers}
+          emptyText="Nenhuma classe de fornecedor"
+          countSuffix="fornec. vinculados"
+          classes={supplierClasses}
+          onOpenDrawer={() => openClassDrawer("supplier")}
+          onDeleteClass={async (id) => handleDeleteClass(id, "supplier")}
+        />
+      </div>
 
-      {/* Quantidade de Mesas */}
-      <section className="bg-card border border-border rounded-[2rem] p-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <LayoutGrid size={20} className="text-primary" />
-          <h3 className="uppercase text-lg">Ambiente e Mesas</h3>
-        </div>
+      {/* DRAWER 1: QUANTIDADE DE MESAS (Usando ui/sheet) */}
+      <TableSettingsSheet
+        isOpen={isTableDrawerOpen}
+        onOpenChange={setIsTableDrawerOpen}
+        initialTables={initialTables}
+        onSave={handleSaveTables}
+        isSaving={isSavingTables}
+      />
 
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest leading-none">
-              Quantidade de Mesas
-            </span>
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">
-              Total de mesas disponíveis no salão e PDV
-            </p>
-          </div>
-
-          <div className="flex items-center gap-4 bg-secondary/10 p-2 rounded-2xl border border-border/50">
-            <button
-              onClick={() => setTotalTables(Math.max(1, totalTables - 1))}
-              className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center font-bold hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
-            >
-              -
-            </button>
-            <div className="w-12 text-center text-xl font-bold">
-              {totalTables}
-            </div>
-            <button
-              onClick={() => setTotalTables(totalTables + 1)}
-              className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center font-bold hover:bg-primary hover:text-white transition-all shadow-sm active:scale-95"
-            >
-              +
-            </button>
-          </div>
-        </div>
-
-        <div className="pt-2">
-          <Button
-            onClick={handleSaveTables}
-            disabled={isSaving || totalTables === user?.restaurant?.totalTables}
-            className="w-full rounded-2xl bg-primary text-primary-foreground font-black uppercase tracking-widest h-14 hover:opacity-90 shadow-lg shadow-primary/20 transition-all border-none"
-          >
-            {isSaving ? "Atualizando..." : "Salvar Alteração"}
-          </Button>
-        </div>
-      </section>
+      {/* DRAWER 2: CRIAÇÃO DE CLASSES (Usando ui/sheet) */}
+      <ClassCreationSheet
+        isOpen={isClassDrawerOpen}
+        onOpenChange={setIsClassDrawerOpen}
+        activeClassType={activeClassType}
+        onSaveClass={handleSaveClass}
+      />
     </div>
   );
 };

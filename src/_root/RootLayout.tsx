@@ -11,20 +11,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "../components/ui/sidebar";
-import { useData } from "../contexts/DataContext";
-import LoadingComponent from "../components/shared/LoadingComponent";
-
 const RootLayout = () => {
-  const { isLoading } = useData();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingComponent />
-      </div>
-    );
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar />

@@ -25,13 +25,13 @@ export function SupplierCard({
   return (
     <div
       onClick={onClick}
-      className="group bg-card dark:bg-zinc-900 border border-border p-6 rounded-[32px] flex flex-col gap-5 hover:shadow-xl hover:border-primary/20 transition-all duration-300 cursor-pointer relative overflow-hidden animate-in fade-in slide-in-from-bottom-2"
+      className="group bg-card dark:bg-zinc-900 border border-border p-6 rounded-xl flex flex-col gap-5 hover:shadow-xl hover:border-primary/20 transition-all duration-300 cursor-pointer relative overflow-hidden animate-in fade-in slide-in-from-bottom-2"
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-5 min-w-0">
           {/* Avatar */}
           <div
-            className={`w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center font-black text-xl shadow-inner transition-all group-hover:scale-105 duration-300 ${
+            className={`w-14 h-14 shrink-0 rounded-xl flex items-center justify-center font-black text-xl shadow-inner transition-all group-hover:scale-105 duration-300 ${
               supplier.category === "Alimentos"
                 ? "bg-emerald-500/10 text-emerald-500"
                 : "bg-primary/10 text-primary"

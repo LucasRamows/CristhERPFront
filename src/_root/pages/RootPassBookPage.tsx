@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   costomersService,
@@ -10,13 +10,13 @@ import { PassbookClientListPanel } from "../components/passbook/PassbookClientLi
 import RootCreateCustomerSheet from "../components/passbook/RootCreateCustomerSheet";
 import { PdvPaymentModal } from "../components/pdv/PdvPaymentModal";
 import LoadingComponent from "../../components/shared/LoadingComponent";
+import { SearhListPicker } from "../../components/shared/SearhListPicker";
 import { toast } from "sonner";
 import { Button } from "../../components/ui/button";
 
 export default function RootPassBookPage() {
   const [clients, setClients] = useState<CostomersResponse[]>([]);
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isCreateCustomerModalOpen, setIsCreateCustomerModalOpen] =
     useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -185,22 +185,20 @@ export default function RootPassBookPage() {
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
       <div className="flex gap-2">
-        <div className="flex-1 flex card-default px-4 py-3 items-center">
-          <Search size={18} className="text-muted-foreground mr-2 shrink-0" />
-          <input
-            type="text"
+        <div className="flex-1 w-full">
+          <SearhListPicker
+            items={clients}
+            onSelect={(client) => setActiveClientId(client.id)}
             placeholder="Buscar apelido ou nome..."
-            className="bg-transparent border-none outline-none w-full font-semibold text-foreground placeholder-muted-foreground"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            searchKeys={["fullName", "nickname"]}
+            avatarText={(client) => client.nickname.charAt(0).toUpperCase()}
+            renderTitle={(client) => client.nickname}
+            renderSubtitle={(client) => client.fullName}
           />
         </div>
-        <Button
-          onClick={() => setIsCreateCustomerModalOpen(true)}
-          className="h-full flex items-center justify-center"
-        >
+        <Button onClick={() => setIsCreateCustomerModalOpen(true)}>
           <Plus size={20} />
-          Adicionar
+          <span className="hidden sm:inline">Adicionar</span>
         </Button>
       </div>
       <div className="flex h-full w-full overflow-hidden card-default">
@@ -208,7 +206,6 @@ export default function RootPassBookPage() {
           clients={clients}
           activeClientId={activeClientId}
           setActiveClientId={setActiveClientId}
-          searchQuery={searchQuery}
         />
 
         {/* LADO DIREITO: DETALHES DO CLIENTE */}

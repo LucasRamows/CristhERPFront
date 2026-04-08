@@ -13,6 +13,10 @@ import { PdvWeightModal } from "../components/pdv/PdvWeightModal";
 import { useEffect, useMemo } from "react";
 import LoadingComponent from "../../components/shared/LoadingComponent";
 import {
+  PageTabNavigation,
+  type TabItem,
+} from "../../components/shared/PageTabNavigation";
+import {
   SearhListPicker,
   StatusLegend,
 } from "../../components/shared/SearhListPicker";
@@ -27,14 +31,23 @@ import {
   type OpenOrdersResponse,
 } from "../../services/orders/orders.service";
 import type { ProductsResponse } from "../../services/products/products.service";
+import type { Category } from "../../components/shared/CategoryFilter";
 import { PdvSplitModal } from "../components/pdv/pdvSplitModal";
-import { MENU_CATEGORIES_FOR_PDV } from "../constants/menuCategories";
 import type { PdvEntity } from "../types/PdvEntity";
+
+const pdvTabs: TabItem[] = [
+  { id: "mesas", label: "Mesas (Salão)" },
+  { id: "comandas", label: "Comandas" },
+  { id: "caixa_rapido", label: "Caixa Rápido" },
+];
 
 export default function RootPdvPage() {
   const { data: user } = useAuthenticatedUser();
   const [activeView, setActiveView] = useState("mesas");
   const [activeEntity, setActiveEntity] = useState<PdvEntity | null>(null);
+  const [categories] = useState<Category[]>(
+    user?.restaurant?.ProductCategories || [],
+  );
 
   const [openOrders, setOpenOrders] = useState<OpenOrdersResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +57,6 @@ export default function RootPdvPage() {
   const [activeModalProduct, setActiveModalProduct] =
     useState<CartEditingItem | null>(null);
 
-  const [selectedCategory, setSelectedCategory] = useState("Todos");
   const [orders, setOrders] = useState<Record<string, any[]>>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("@CristhERP:draft_orders");
@@ -189,46 +201,27 @@ export default function RootPdvPage() {
       </div>
     </div>
   );
-  const baseButtonClasses =
-    "inline-flex h-full items-center justify-center whitespace-nowrap rounded-full px-5 md:px-8 text-sm md:text-base font-bold transition-all";
-
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
       <div className="flex h-12 md:min-h-14 w-full items-center justify-between overflow-hidden">
-        <div className="flex h-full w-fit items-center justify-center rounded-full bg-muted p-1 md:p-1.5 text-foreground overflow-x-auto hide-scrollbar">
-          <button
-            onClick={() => setActiveView("mesas")}
-            className={`${baseButtonClasses} ${
-              activeView === "mesas"
-                ? "bg-muted-foreground text-muted"
-                : "hover:text-gray-900"
-            }`}
-          >
-            Mesas (Salão)
-          </button>
-          <button
-            onClick={() => setActiveView("comandas")}
-            className={`${baseButtonClasses} ${
-              activeView === "comandas"
-                ? "bg-muted-foreground text-muted"
-                : "hover:text-gray-900"
-            }`}
-          >
-            Comandas
-          </button>
-          <button
-            onClick={actions.handleCaixaRapido}
-            className={`${baseButtonClasses} ${
-              activeView === "menu" &&
-              (activeEntity?.id === "caixa_balcao" ||
-                activeEntity?.orderType === "COUNTER")
-                ? "bg-muted-foreground text-muted"
-                : "hover:text-gray-900"
-            }`}
-          >
-            Caixa Rápido
-          </button>
-        </div>
+        <PageTabNavigation
+          tabs={pdvTabs}
+          activeTab={
+            activeView === "menu" &&
+            (activeEntity?.id === "caixa_balcao" ||
+              activeEntity?.orderType === "COUNTER")
+              ? "caixa_rapido"
+              : activeView
+          }
+          onTabChange={(id) => {
+            if (id === "caixa_rapido") {
+              actions.handleCaixaRapido();
+            } else {
+              setActiveView(id);
+            }
+          }}
+          className="bg-muted"
+        />
         <PdvHistorySheet
           orders={openOrders}
           onOrderSelect={actions.handleEntityClick}
@@ -305,9 +298,7 @@ export default function RootPdvPage() {
               <PdvMenu
                 activeEntity={activeEntity as any}
                 setActiveView={setActiveView}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                categories={MENU_CATEGORIES_FOR_PDV}
+                categories={categories}
                 setAllProducts={setAllProducts}
                 onProductClick={(item) =>
                   setActiveModalProduct({

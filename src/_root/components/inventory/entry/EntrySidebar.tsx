@@ -1,4 +1,4 @@
-import { Package, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { SearhListPicker } from "../../../../components/shared/SearhListPicker";
 import type { IngredientResponse } from "../../../../services/inventory/inventory.service";
 
@@ -25,21 +25,9 @@ export function EntrySidebar({
             onSelect={(item) => item && handleAddIngredient(item)}
             placeholder="Buscar por nome…"
             searchKeys={["name"]}
-            renderItem={(item) => (
-              <div className="flex items-center gap-2.5 py-0.5">
-                <div className="w-8 h-8 bg-muted rounded-xl flex items-center justify-center text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-colors shrink-0">
-                  <Package size={16} />
-                </div>
-                <div>
-                  <p className="font-bold text-sm text-foreground">
-                    {item.name}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
-                    {item.unit}
-                  </p>
-                </div>
-              </div>
-            )}
+            avatarText={(item) => item.name.charAt(0).toUpperCase()}
+            renderTitle={(item) => item.name}
+            renderSubtitle={(item) => item.unit}
           />
         </div>
 

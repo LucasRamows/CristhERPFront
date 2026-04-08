@@ -63,16 +63,8 @@ export function EntryMetaData({
               onSelect={setSelectedSupplier}
               placeholder="Buscar fornecedor…"
               searchKeys={["name", "identification"]}
-              renderItem={(item) => (
-                <div className="flex items-center gap-2.5 py-0.5">
-                  <div className="w-8 h-8 bg-muted rounded-xl flex items-center justify-center text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-colors shrink-0">
-                    <Building2 size={16} />
-                  </div>
-                  <span className="font-bold text-sm text-foreground truncate">
-                    {item.name}
-                  </span>
-                </div>
-              )}
+              avatarText={(item) => item.name.charAt(0).toUpperCase()}
+              renderTitle={(item) => item.name}
             />
           )}
         </div>

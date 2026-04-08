@@ -1,11 +1,6 @@
-import { formatDistanceToNow } from "date-fns";
+import { formatDate, formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-  ChevronRight,
-  DollarSign,
-  ShoppingBag,
-  Utensils
-} from "lucide-react";
+import { ChevronRight, DollarSign, ShoppingBag, Utensils } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -33,6 +28,7 @@ import {
 } from "../../services/orders/orders.service";
 import { DashboardOrderItem } from "../components/dashboard/DashboardOrderItem";
 import { DashboardStatCard } from "../components/dashboard/DashboardStatCard";
+import { Button } from "../../components/ui/button";
 
 const RootDashboardPage = () => {
   const { data: user } = useAuthenticatedUser();
@@ -44,18 +40,22 @@ const RootDashboardPage = () => {
   const navigate = useNavigate();
 
   // Estado local para gerenciar a entrega sem alterar o banco
-  const [localDeliveredOrders, setLocalDeliveredOrders] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("@CristhERP:delivered_orders");
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [localDeliveredOrders, setLocalDeliveredOrders] = useState<string[]>(
+    () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("@CristhERP:delivered_orders");
+        return saved ? JSON.parse(saved) : [];
+      }
+      return [];
+    },
+  );
 
   useEffect(() => {
-    localStorage.setItem("@CristhERP:delivered_orders", JSON.stringify(localDeliveredOrders));
+    localStorage.setItem(
+      "@CristhERP:delivered_orders",
+      JSON.stringify(localDeliveredOrders),
+    );
   }, [localDeliveredOrders]);
-
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -156,6 +156,7 @@ const RootDashboardPage = () => {
 
                 <XAxis
                   dataKey="date"
+                  tickFormatter={(v) => formatDate(v, "dd/MM")}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12, fill: "#A1A1AA" }}
@@ -168,31 +169,32 @@ const RootDashboardPage = () => {
                   tick={{ fontSize: 12, fill: "#A1A1AA" }}
                 />
 
-                {/* Tooltip personalizado para formatar data e valores */}
                 <Tooltip
                   contentStyle={{
                     borderRadius: "12px",
                     border: "none",
                     boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                   }}
+                  formatter={(value, name) =>
+                    name === "Faturamento" ? formatMoney(Number(value)) : value
+                  }
+                  labelFormatter={(v) => formatDate(v, "dd/MM")}
                 />
 
-                {/* Área para Quantidade de Vendas */}
                 <Area
                   name="Qtd. Vendas"
                   type="monotone"
-                  dataKey="vendas" // Ajustado para o seu novo JSON
+                  dataKey="vendas"
                   stroke="#10b981"
                   fillOpacity={1}
                   fill="url(#colorVendas)"
                   strokeWidth={3}
                 />
 
-                {/* Se quiser mostrar o faturamento no mesmo gráfico: */}
                 <Area
-                  name="Faturamento (R$)"
+                  name="Faturamento"
                   type="monotone"
-                  dataKey="faturamento" // Ajustado para o seu novo JSON
+                  dataKey="faturamento"
                   stroke="#71717a"
                   fillOpacity={0.05}
                   fill="#71717a"
@@ -272,7 +274,8 @@ const RootDashboardPage = () => {
               })}
 
             {/* Ajuste no estado vazio para usar cores do seu tema */}
-            {openOrders.filter((o) => !localDeliveredOrders.includes(o.id)).length === 0 && (
+            {openOrders.filter((o) => !localDeliveredOrders.includes(o.id))
+              .length === 0 && (
               <div className="text-center py-10 border-2 border-dashed border-border rounded-xl">
                 <p className="text-muted-foreground font-medium uppercase text-sm">
                   Nenhum pedido em andamento
@@ -280,13 +283,10 @@ const RootDashboardPage = () => {
               </div>
             )}
           </div>
-          <button
-            onClick={() => navigate("/root/sales")}
-            className="w-full mt-8 py-3 bg-[#DCFF79] hover:bg-[#c9ea6b] text-primary rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 uppercase shadow-sm"
-          >
+          <Button onClick={() => navigate("/root/sales")}>
             Ver Monitor de Pedidos{" "}
             <ChevronRight size={18} className="text-primary" />
-          </button>
+          </Button>
         </Card>
       </div>
     </div>

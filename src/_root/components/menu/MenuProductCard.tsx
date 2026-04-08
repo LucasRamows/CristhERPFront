@@ -3,14 +3,12 @@ import type { ProductsResponse } from "../../../services/products/products.servi
 
 interface ProductCardProps {
   item: ProductsResponse;
-  icon: React.ReactNode;
   onClick: (item: ProductsResponse) => void;
   formatMoney: (value: number) => string;
 }
 
 export const ProductCard = ({
   item,
-  icon: Icon,
   onClick,
   formatMoney,
 }: ProductCardProps) => {
@@ -28,7 +26,7 @@ export const ProductCard = ({
       <div className="flex items-start justify-between gap-3 mt-1">
         <div className="flex flex-col overflow-hidden">
           <p className="text-[9px] text-muted-foreground font-bold tracking-widest uppercase truncate">
-            {item.category}
+            {item.category?.name}
           </p>
           <h3 className="font-bold text-foreground text-sm leading-tight mt-1 truncate">
             {item.name}
@@ -36,7 +34,9 @@ export const ProductCard = ({
         </div>
 
         <div className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 bg-muted/50 text-muted-foreground group-hover:scale-110 group-hover:bg-decoration/10 group-hover:text-foreground transition-all">
-          {Icon}
+          <span className="font-bold text-xs">
+            {item.category?.name?.charAt(0).toUpperCase()}
+          </span>
         </div>
       </div>
 

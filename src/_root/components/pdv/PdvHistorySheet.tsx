@@ -56,7 +56,7 @@ export function PdvHistorySheet({
       <SheetTrigger asChild>
         <Button
           variant="outline"
-          className="rounded-full bg-gray-100 border-none text-gray-500 hover:text-gray-900 font-bold gap-2"
+          className="rounded-xl bg-gray-100 border-none text-gray-500 hover:text-gray-900 font-bold gap-2"
         >
           <History size={18} />
           HISTÓRICO

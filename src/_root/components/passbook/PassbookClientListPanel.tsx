@@ -5,23 +5,14 @@ export interface PassbookClientListPanelProps {
   clients: CostomersResponse[];
   activeClientId: string | null;
   setActiveClientId: (id: string | null) => void;
-  searchQuery: string;
 }
 
 export function PassbookClientListPanel({
   clients,
   activeClientId,
   setActiveClientId,
-  searchQuery,
 }: PassbookClientListPanelProps) {
-  const query = searchQuery?.toLowerCase() ?? "";
 
-  const filteredClients = clients?.filter((c) => {
-    const fullName = c.fullName?.toLowerCase() ?? "";
-    const nickname = c.nickname?.toLowerCase() ?? "";
-
-    return fullName.includes(query) || nickname.includes(query);
-  });
 
   return (
     <div
@@ -30,7 +21,7 @@ export function PassbookClientListPanel({
       }`}
     >
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        {filteredClients?.map((client) => {
+        {clients?.map((client) => {
           return (
             <button
               key={client.id}

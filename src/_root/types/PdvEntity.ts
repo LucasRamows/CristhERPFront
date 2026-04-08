@@ -12,4 +12,5 @@ export interface PdvEntity {
   serviceTax: number;
   items?: any[];
   openedAt?: string;
+  sale_date?: string;
 }

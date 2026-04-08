@@ -13,15 +13,11 @@ import type { SelectedProductForObs } from "../../../../services/products/produc
 export interface PdvRenderActionsProps {
   onConfirm: (product: SelectedProductForObs) => void;
   product: SelectedProductForObs;
-  isBalcao: boolean;
-  setShowDatePicker: (show: boolean) => void;
 }
 
 export const PdvRenderActions = ({
   onConfirm,
   product,
-  isBalcao,
-  setShowDatePicker,
 }: PdvRenderActionsProps) => (
   <>
     <button
@@ -30,23 +26,6 @@ export const PdvRenderActions = ({
     >
       Confirmar
     </button>
-
-    {isBalcao && (
-      <>
-        <div className="flex items-center gap-2 my-1">
-          <div className="flex-1 h-[1px] bg-gray-200" />
-          <span className="text-xs text-gray-400 font-semibold">ou</span>
-          <div className="flex-1 h-[1px] bg-gray-200" />
-        </div>
-
-        <Button
-          onClick={() => setShowDatePicker(true)}
-          className="w-full bg-gray-100 text-gray-700 font-bold text-lg py-4 rounded-2xl border border-gray-200 hover:bg-gray-200 active:scale-[0.97] transition-all"
-        >
-          Lançar Venda Retroativa
-        </Button>
-      </>
-    )}
   </>
 );
 
@@ -92,6 +71,8 @@ export const PdvRenderDatePicker = ({
           mode="single"
           selected={saleDate}
           onSelect={setSaleDate}
+          disabled={{ after: new Date() }}
+          locale={ptBR}
           initialFocus
         />
       </PopoverContent>

@@ -1,6 +1,5 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { SearhListPicker } from "../../../components/shared/SearhListPicker";
-import { Avatar, AvatarFallback } from "../../../components/ui/avatar";
 import { type IngredientResponse } from "../../../services/inventory/inventory.service";
 import { InventoryHistorySheet } from "./InventoryHistorySheet";
 import { InventoryTableRow } from "./InventoryTableRow";
@@ -29,24 +28,14 @@ export function InventoryTable({ items }: InventoryTableProps) {
             onSelect={handleItemClick}
             placeholder="Buscar insumo por nome..."
             searchKeys={["name"]}
-            renderItem={(item) => (
-              <div className="flex items-center gap-3 py-1 text-left">
-                <Avatar className="h-10 w-10 border border-zinc-100 dark:border-zinc-800 rounded-2xl flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 overflow-hidden shrink-0 transition-transform group-hover:scale-110">
-                  <AvatarFallback className="font-black text-xs text-primary bg-primary/10 w-full h-full flex items-center justify-center">
-                    {item.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col min-w-0">
-                  <span className="font-black text-sm text-zinc-800 dark:text-zinc-200 truncate">
-                    {item.name}
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-                    {item.currentStock} {item.unit}{" "}
-                    {Number(item.minStock || 0) > 0 &&
-                      `• Mínimo ${item.minStock} ${item.unit}`}
-                  </span>
-                </div>
-              </div>
+            avatarText={(item) => item.name.charAt(0).toUpperCase()}
+            renderTitle={(item) => item.name}
+            renderSubtitle={(item) => (
+              <>
+                {item.currentStock} {item.unit}{" "}
+                {Number(item.minStock || 0) > 0 &&
+                  `• Mínimo ${item.minStock} ${item.unit}`}
+              </>
             )}
           />
         </div>

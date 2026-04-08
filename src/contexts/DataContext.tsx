@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../services/api"; // ATENÇÃO: Importe a sua configuração do Axios aqui
+import type { ClassItem } from "../_root/components/settings/SettingsDataClassesCard";
 
 export interface User {
   id: string;
@@ -17,6 +18,8 @@ export interface User {
     plan: string;
     restaurantName: string;
     totalTables: number;
+    SupplierCategories: ClassItem[];
+    ProductCategories: ClassItem[];
   };  
 }
 
@@ -57,7 +60,7 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
         console.error("Sessão expirada ou não autenticado (sem cookie válido).");
         setUser(null);
       } finally {
-        setIsLoading(false); // Liberta a tela independentemente do resultado
+        setIsLoading(false); 
       }
     };
 

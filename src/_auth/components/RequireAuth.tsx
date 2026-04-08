@@ -22,7 +22,7 @@ const RequireAuth = ({ minRole, onlyRoles }: RequireAuthProps) => {
   const location = useLocation();
 
   if (isLoading) {
-    return <LoadingComponent />;
+    return <LoadingComponent fullScreen />;
   }
 
   if (!isAuthenticated || !user) {

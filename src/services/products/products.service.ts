@@ -5,7 +5,10 @@ export interface ProductsResponse {
   code: string;
   name: string;
   description: string;
-  category: string;
+  category: {
+    name: string;
+  };
+  categoryId: string;
   unit: "UN" | "KG";
   price: number;
   status: boolean;
@@ -17,7 +20,7 @@ export interface ProductsUpload {
   code: string;
   name: string;
   description: string;
-  category: string;
+  categoryId: string;
   unit: "UN" | "KG";
   price: number;
   status: boolean;
@@ -28,7 +31,7 @@ export interface CreateProductRequest {
   code: string;
   name: string;
   description: string;
-  category: string;
+  categoryId: string;
   unit: "UN" | "KG";
   price: number;
   status: boolean;

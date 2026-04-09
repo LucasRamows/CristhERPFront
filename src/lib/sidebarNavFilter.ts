@@ -47,7 +47,7 @@ export const sidebarNavigation: NavItem[] = [
     name: "Financeiro",
     url: "/root/financial",
     icon: BadgeDollarSign,
-    roles: ["ADMIN", "OWNER"],
+    roles: ["ADMIN", "OWNER", "MANAGER"],
   },
   {
     name: "Estoque",
@@ -65,6 +65,6 @@ export const sidebarNavigation: NavItem[] = [
     name: "Equipe",
     url: "/root/staff",
     icon: Users,
-    roles: ["ADMIN", "OWNER"],
+    roles: ["ADMIN",],
   },
 ];

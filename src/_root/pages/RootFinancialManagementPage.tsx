@@ -1,22 +1,26 @@
 import {
+  CalendarIcon,
   CheckCircle,
-  CreditCard,
-  DollarSign,
   DownloadCloud,
   FileSpreadsheet,
   FileText,
-  PieChart,
 } from "lucide-react";
 import { useState } from "react";
 
+import { Popover } from "@radix-ui/react-popover";
 import {
   PageTabNavigation,
   type TabItem,
 } from "../../components/shared/PageTabNavigation";
+import { Calendar } from "../../components/ui/calendar";
+import { PopoverContent, PopoverTrigger } from "../../components/ui/popover";
+import { Button } from "../../components/ui/button";
 import { FinancialAccountsPanel } from "../components/financial/FinancialAccountsPanel";
 import { FinancialConciliationPanel } from "../components/financial/FinancialConciliationPanel";
+import FinancialDailyCashFlowPanel from "../components/financial/FinancialDailyCashFlowPanel";
 import { FinancialDrePanel } from "../components/financial/FinancialDrePanel";
-
+import { ptBR } from "date-fns/locale";
+import { format } from "date-fns";
 // --- DADOS MOCKADOS ---
 const MOCK_CONTAS = {
   pagar: [
@@ -136,11 +140,11 @@ const MOCK_CONCILIACAO = [
 ];
 
 export default function FinancialManagementPage() {
-  const [activeView, setActiveView] = useState("contas"); // "contas" | "dre" | "conciliacao" | "contador"
+  const [activeView, setActiveView] = useState("fluxo"); // "contas" | "dre" | "conciliacao" | "contador"
 
   // Estados para simulação do envio ao contador
-  const [exportState, setExportState] = useState("idle"); // 'idle' | 'processing' | 'success'
-
+  const [exportState, setExportState] = useState("idle");
+  const [saleDate, setSaleDate] = useState<Date>(new Date());
   const handleExport = () => {
     setExportState("processing");
     setTimeout(() => {
@@ -150,10 +154,11 @@ export default function FinancialManagementPage() {
   };
 
   const financialTabs: TabItem[] = [
-    { id: "contas", label: "Contas a Pagar/Receber", icon: DollarSign },
-    { id: "dre", label: "DRE & Caixa", icon: PieChart },
-    { id: "conciliacao", label: "Conciliação", icon: CreditCard },
-    { id: "contador", label: "Fechar Mês (Contador)", icon: FileText },
+    // { id: "contas", label: "Contas a Pagar/Receber", icon: DollarSign },
+    // { id: "dre", label: "DRE & Caixa", icon: PieChart },
+    // { id: "conciliacao", label: "Conciliação", icon: CreditCard },
+    // { id: "contador", label: "Fechar Mês (Contador)", icon: FileText },
+    { id: "fluxo", label: "Fluxo de Caixa", icon: FileText },
   ];
 
   // Cálculos rápidos para o dashboard de contas
@@ -165,16 +170,68 @@ export default function FinancialManagementPage() {
     .reduce((acc, curr) => acc + curr.valor, 0);
 
   return (
-    <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
+    <div className="flex flex-col w-full gap-4 bg-background select-none">
       {/* TOP NAVBAR (Toggle Switch) */}
-      <PageTabNavigation
-        tabs={financialTabs}
-        activeTab={activeView}
-        onTabChange={setActiveView}
-      />
-      <div className="flex h-full w-full overflow-hidden bg-card rounded-2xl">
+      <div className="w-full flex justify-between">
+        <PageTabNavigation
+          tabs={financialTabs}
+          activeTab={activeView}
+          onTabChange={setActiveView}
+        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline">
+              <div className="flex items-center gap-2">
+                <CalendarIcon
+                  size={18}
+                  className={`transition-colors ${
+                    saleDate ? "text-primary" : "text-muted-foreground"
+                  }`}
+                />
+                <span className="text-xs font-black uppercase tracking-widest mt-0.5">
+                  {saleDate
+                    ? format(saleDate, "dd 'de' MMMM", { locale: ptBR })
+                    : "Selecionar Data"}
+                </span>
+              </div>
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            className="w-auto p-3 rounded-[1.5rem] border-border/50 bg-card/95 backdrop-blur-xl shadow-2xl z-50"
+            align="end"
+          >
+            <Calendar
+              mode="single"
+              selected={saleDate}
+              onSelect={(newDate) => {
+                if (newDate) {
+                  const now = new Date();
+                  newDate.setHours(
+                    now.getHours(),
+                    now.getMinutes(),
+                    now.getSeconds(),
+                    now.getMilliseconds(),
+                  );
+                  setSaleDate(newDate);
+                }
+              }}
+              disabled={{ after: new Date() }}
+              locale={ptBR}
+              initialFocus
+              className="p-0"
+              classNames={{
+                day_selected:
+                  "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                day_today: "bg-muted text-accent-foreground",
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+      <div className="flex w-full bg-card rounded-xl">
         {/* ÁREA DE CONTEÚDO DINÂMICO */}
-        <div className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar">
+        <div className="flex-1 bg-gray-50/50 relative custom-scrollbar">
           {/* VISÃO 1: CONTAS A PAGAR E RECEBER */}
           {activeView === "contas" && (
             <FinancialAccountsPanel
@@ -316,29 +373,13 @@ export default function FinancialManagementPage() {
               </div>
             </div>
           )}
+
+          {/* VISÃO 3: CONCILIAÇÃO DE CARTÕES */}
+          {activeView === "fluxo" && (
+            <FinancialDailyCashFlowPanel data={saleDate} />
+          )}
         </div>
       </div>
-
-      {/* --- ESTILOS E ANIMAÇÕES --- */}
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @keyframes fadeIn { 
-          from { opacity: 0; transform: translateY(10px); } 
-          to { opacity: 1; transform: translateY(0); } 
-        }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
-      `,
-        }}
-      />
     </div>
   );
 }

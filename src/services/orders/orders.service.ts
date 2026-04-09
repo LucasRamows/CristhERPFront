@@ -47,6 +47,35 @@ export interface OpenOrdersResponse {
     };
   }[];
 }
+
+export interface DayOrdersResponse {
+  id: string;
+  orderType: string;
+  reference: string;
+  status: string;
+  sale_date: string;
+  subtotal: string;
+  serviceTax: string;
+  discount: string;
+  total: string;
+  openedAt: string;
+  items: {
+    id: string;
+    productId: string;
+    quantity: number;
+    unitPrice: string;
+    notes: string[];
+    product: {
+      id: string;
+      name: string;
+      price: string;
+    };
+  }[];
+  payments: {
+    id: string;
+    method: string;
+  }[];
+}
 export interface CreateOrderItem {
   productId: string;
   quantity: number;
@@ -136,6 +165,11 @@ export const ordersService = {
     const { data } = await api.get<OrdersHistorySalesResponse[]>(
       "/orders/daily-sales",
     );
+    return data;
+  },
+
+  async getDayOrders(date: string): Promise<DayOrdersResponse[]> {
+    const { data } = await api.get<DayOrdersResponse[]>(`/orders/day-orders?date=${date}`);
     return data;
   },
 };

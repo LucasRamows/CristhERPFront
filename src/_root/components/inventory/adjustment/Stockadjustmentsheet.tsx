@@ -6,18 +6,18 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
-import { type IngredientResponse } from "../../../../services/inventory/inventory.service";
+import { type ItemResponse } from "../../../../services/inventory/inventory.service";
 import { InventoryQuantityInput } from "../InventoryQuantityInput";
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface StockAdjustmentSheetProps {
-  item: IngredientResponse | null;
+  item: ItemResponse | null;
   isOpen: boolean;
   onClose: () => void;
   /** Called after the user confirms — adjust your service call here. */
   onConfirm: (
-    item: IngredientResponse,
+    item: ItemResponse,
     newStock: number,
     delta: number,
   ) => Promise<void>;

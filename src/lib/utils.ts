@@ -128,6 +128,10 @@ const mapOrderToPdvEntity = (order: OpenOrdersResponse): PdvEntity => {
     label: isTable ? `MESA ${order.reference}` : `CMD ${order.reference}`,
   };
 };
+
+function getReference() {
+  return crypto.randomUUID().slice(0, 8);
+}
 export {
   formatCEP,
   isDeepEqual,
@@ -138,4 +142,5 @@ export {
   removeMask,
   formatTime,
   mapOrderToPdvEntity,
+  getReference,
 };

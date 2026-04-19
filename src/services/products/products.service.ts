@@ -1,91 +1,27 @@
 import api from "../api";
-
-export interface ProductsResponse {
-  id: string;
-  code: string;
-  name: string;
-  description: string;
-  category: {
-    name: string;
-  };
-  categoryId: string;
-  unit: "UN" | "KG";
-  price: number;
-  status: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ProductsUpload {
-  code: string;
-  name: string;
-  description: string;
-  categoryId: string;
-  unit: "UN" | "KG";
-  price: number;
-  status: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-export interface CreateProductRequest {
-  code: string;
-  name: string;
-  description: string;
-  categoryId: string;
-  unit: "UN" | "KG";
-  price: number;
-  status: boolean;
-}
-export interface SelectedProductForObs extends ProductsResponse {
-  obs: string[];
-  quantity: number;
-}
-export interface CreateOrderItem {
-  productId: string;
-  quantity: number;
-  unitPrice: number;
-  notes: string[];
-}
-
-export interface CreateOrderRequest {
-  orderType: string;
-  reference: string;
-  operatorId: string;
-  total: number;
-  items: CreateOrderItem[];
-}
-
-export interface AddItemToOrderRequest {
-  items: CreateOrderItem[];
-}
-
-export interface CloseOrderResponse {
-  message: string;
-}
-
-export interface ProductsStatsResponse {
-  sales_date: string;
-  quantity: number;
-}
+import { mapProductData } from "./ProductsMappers";
+import type {
+  ProductsResponse,
+  CreateProductRequest,
+  ProductsStatsResponse,
+} from "./products.types";
 
 export const productsService = {
   async getProducts(): Promise<ProductsResponse[]> {
     const { data } = await api.get<ProductsResponse[]>("/products");
-
-    return data;
+    return data.map(mapProductData);
   },
 
   async getProductsActive(): Promise<ProductsResponse[]> {
     const { data } = await api.get<ProductsResponse[]>("/products/active");
-
-    return data;
+    return data.map(mapProductData);
   },
 
   async createProduct(
     product: CreateProductRequest,
   ): Promise<ProductsResponse> {
     const { data } = await api.post<ProductsResponse>("/products", product);
-    return data;
+    return mapProductData(data);
   },
 
   async updateProduct(
@@ -96,21 +32,17 @@ export const productsService = {
       `/products/${id}`,
       product,
     );
-    return data;
+    return mapProductData(data);
   },
 
   async deleteProduct(id: string): Promise<void> {
     await api.delete(`/products/${id}`);
   },
 
-  async updateProductStatus(
-    id: string,
-    status: boolean,
-  ): Promise<ProductsResponse> {
+  async updateProductStatus(id: string): Promise<ProductsResponse> {
     const { data } = await api.patch<ProductsResponse>(
       `/products/${id}/status`,
-      { status },
-    );  
+    );
     return data;
   },
 

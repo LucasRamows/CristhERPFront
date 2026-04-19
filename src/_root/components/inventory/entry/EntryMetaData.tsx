@@ -8,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { formatDocument } from "../../../../lib/utils";
-import { SearhListPicker } from "../../../../components/shared/SearhListPicker";
+import { SearchListPicker } from "../../../../components/shared/SearchListPicker";
 import type { SupplierResponse } from "../../../../services/suppliers/suppliers.service";
 
 interface Props {
@@ -58,7 +58,7 @@ export function EntryMetaData({
               </button>
             </div>
           ) : (
-            <SearhListPicker
+            <SearchListPicker
               items={availableSuppliers}
               onSelect={setSelectedSupplier}
               placeholder="Buscar fornecedor…"

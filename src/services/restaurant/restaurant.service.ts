@@ -2,14 +2,14 @@ import api from "../api";
 
 export const restaurantService = {
   async updateTables(totalTables: number) {
-    const { data } = await api.patch(`/restaurants/tables`, {
+    const { data } = await api.patch(`/businesses/tables`, {
       tables: totalTables,
     });
     return data;  
   },
 
   async getMyRestaurant() {
-    const { data } = await api.get("/restaurants");
+    const { data } = await api.get("/businesses");
     return data;
   },
 

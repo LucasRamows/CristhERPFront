@@ -19,7 +19,7 @@ export function InventoryQuantityInput({
   placeholder,
   disabled,
 }: InventoryQuantityInputProps) {
-  const isUnit = unit.toLowerCase() === "un";
+  const isUnit = unit?.toLowerCase() === "un";
   const decimals = isUnit ? 0 : 3;
 
   return (

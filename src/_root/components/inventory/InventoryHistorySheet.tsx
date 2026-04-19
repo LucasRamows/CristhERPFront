@@ -16,39 +16,43 @@ import {
 import {
   inventoryService,
   type InventoryMovement,
-  type IngredientResponse,
+  type ItemResponse,
 } from "../../../services/inventory/inventory.service";
 import { HistorySection } from "./history/HistorySection";
 import { StockAdjustmentSheet } from "./adjustment/Stockadjustmentsheet";
 
 interface InventoryHistorySheetProps {
-  item: IngredientResponse | null;
+  item: ItemResponse | null;
   isOpen: boolean;
   onClose: () => void;
+  onAdjusted?: (item: ItemResponse) => void;
 }
 
 export function InventoryHistorySheet({
   item,
   isOpen,
+  onAdjusted,
   onClose,
 }: InventoryHistorySheetProps) {
   const [history, setHistory] = useState<InventoryMovement[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isAdjustOpen, setIsAdjustOpen] = useState(false);
 
+  const fetchHistory = async () => {
+    if (!item?.id) return;
+    try {
+      setIsLoading(true);
+      const data = await inventoryService.getItemHistory(item.id);
+      setHistory(data);
+    } catch (error) {
+      console.error("Erro ao buscar histórico:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && item?.id) {
-      const fetchHistory = async () => {
-        try {
-          setIsLoading(true);
-          const data = await inventoryService.getIngredientHistory(item.id);
-          setHistory(data);
-        } catch (error) {
-          console.error("Erro ao buscar histórico:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
       fetchHistory();
     }
   }, [isOpen, item?.id]);
@@ -249,10 +253,18 @@ export function InventoryHistorySheet({
                         isOpen={isAdjustOpen}
                         onClose={() => setIsAdjustOpen(false)}
                         onConfirm={async (adjItem, delta) => {
-                          await inventoryService.balanceStock(
-                            adjItem.id,
-                            delta,
-                          );
+                          try {
+                            const updatedItem =
+                              await inventoryService.balanceStock(
+                                adjItem.id,
+                                delta,
+                              );
+                            onAdjusted?.(updatedItem);
+                            await fetchHistory();
+                            setIsAdjustOpen(false);
+                          } catch (error) {
+                            console.error("Erro no ajuste:", error);
+                          }
                         }}
                       />
                     )}

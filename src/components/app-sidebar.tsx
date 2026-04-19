@@ -17,10 +17,12 @@ import { sidebarNavigation } from "../lib/sidebarNavFilter";
 import { NavSecondary } from "./nav-secondary";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data } = useAuthenticatedUser();
+  const { data, businessType } = useAuthenticatedUser();
 
-  const filteredNav = sidebarNavigation.filter((item) =>
-    item.roles.includes(data?.role),
+  const filteredNav = sidebarNavigation.filter(
+    (item) =>
+      item.roles.includes(data?.role) &&
+      (item.businessType === "ALL" || item.businessType === businessType),
   );
 
   const block = {

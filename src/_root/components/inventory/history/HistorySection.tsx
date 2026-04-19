@@ -2,15 +2,13 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   Calendar,
-  FileText,
   Hash,
   History,
-  User,
   Scale,
+  User
 } from "lucide-react";
 import { Badge } from "../../../../components/ui/badge";
 import { type InventoryMovement } from "../../../../services/inventory/inventory.service";
-import { formatDocument } from "../../../../lib/utils";
 
 interface HistorySectionProps {
   title: string;
@@ -32,147 +30,164 @@ export function HistorySection({
         hour: "2-digit",
         minute: "2-digit",
       }).format(new Date(dateString));
-    } catch (e) {
+    } catch {
       return dateString;
     }
   };
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-4">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center border border-border">
-          <History size={32} className="opacity-20" />
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-4">
+        <div className="w-20 h-20 bg-muted rounded-2xl flex items-center justify-center border border-border">
+          <History size={36} className="opacity-30" />
         </div>
-        <p className="font-bold text-sm">Nenhuma movimentação registrada</p>
+        <div className="text-center">
+          <p className="font-semibold text-foreground">
+            Nenhuma movimentação registrada
+          </p>
+          <p className="text-sm mt-1">As movimentações aparecerão aqui</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 text-left">
-      <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">
+    <div className="space-y-5">
+      <h3 className="text-xs font-black uppercase tracking-[0.125em] text-muted-foreground pl-1">
         {title}
       </h3>
-      {items.map((movement) => (
-        <div
-          key={movement.id}
-          className="group relative bg-card border border-border rounded-[24px] p-5 hover:border-primary/20 hover:shadow-xl transition-all duration-300 overflow-hidden"
-        >
-          {movement.type === "IN" ||
-          (movement.type === "BALANCE" && movement.quantity > 0) ? (
-            <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
-          ) : movement.type === "OUT" ||
-            (movement.type === "BALANCE" && movement.quantity < 0) ? (
-            <div className="absolute top-0 right-0 w-24 h-24 bg-destructive/5 rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
-          ) : (
-            <div className="absolute top-0 right-0 w-24 h-24 bg-muted rounded-full -mr-12 -mt-12 opacity-50 transition-all group-hover:scale-110" />
-          )}
 
-          <div className="relative z-10">
-            <div className="flex justify-between items-start mb-4 gap-4">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div
-                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-500 ${
-                    movement.type === "IN" ||
-                    (movement.type === "BALANCE" && movement.quantity > 0)
-                      ? "bg-emerald-500/10 text-emerald-500"
-                      : movement.type === "OUT" ||
-                        (movement.type === "BALANCE" && movement.quantity < 0)
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-muted text-muted-foreground"
-                  }`}
+      {items.map((movement) => {
+        const isIn = movement.type === "IN";
+        const isOut = movement.type === "OUT";
+        const isBalance = movement.type === "ADJUST";
+
+        // Configuração visual por tipo (Balanço é independente)
+        const style = isBalance
+          ? {
+              iconColor: "text-violet-600 dark:text-violet-400",
+              iconBg: "bg-violet-500/10",
+              accentBg: "bg-violet-500/5",
+              badgeColor:
+                "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+              label: "BALANÇO",
+            }
+          : isIn
+          ? {
+              iconColor: "text-emerald-600 dark:text-emerald-400",
+              iconBg: "bg-emerald-500/10",
+              accentBg: "bg-emerald-500/5",
+              badgeColor:
+                "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+              label: "ENTRADA",
+            }
+          : {
+              iconColor: "text-destructive",
+              iconBg: "bg-destructive/10",
+              accentBg: "bg-destructive/5",
+              badgeColor: "bg-destructive/10 text-destructive",
+              label: "SAÍDA",
+            };
+
+        const quantityDisplay = isBalance
+          ? movement.quantity
+          : isIn
+          ? `+${movement.quantity}`
+          : `-${movement.quantity}`;
+
+        return (
+          <div
+            key={movement.id}
+            className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/30 hover:shadow-lg transition-all duration-300 overflow-hidden"
+          >
+            {/* Círculo decorativo de fundo */}
+            <div
+              className={`absolute top-0 right-0 w-28 h-28 ${style.accentBg} rounded-full -mr-12 -mt-12 transition-transform duration-500 group-hover:scale-110`}
+            />
+
+            <div className="relative z-10">
+              {/* Cabeçalho: Ícone + Quantidade + Badge */}
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 duration-300 ${style.iconBg} ${style.iconColor}`}
+                  >
+                    {isBalance ? (
+                      <Scale size={28} strokeWidth={2.5} />
+                    ) : isIn ? (
+                      <ArrowUpCircle size={28} strokeWidth={2} />
+                    ) : (
+                      <ArrowDownCircle size={28} strokeWidth={2} />
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className={`text-3xl font-black tracking-tighter ${style.iconColor}`}
+                      >
+                        {quantityDisplay}
+                      </span>
+                      <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                        {selectedUnit || "un"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                      <Calendar size={13} />
+                      {formatDate(movement.createdAt)}
+                    </div>
+                  </div>
+                </div>
+
+                <Badge
+                  className={`font-black text-xs px-3 py-1 border-0 shadow-sm ${style.badgeColor}`}
                 >
-                  {movement.type === "BALANCE" ? (
-                    <Scale size={24} />
-                  ) : movement.type === "IN" ? (
-                    <ArrowUpCircle size={24} />
-                  ) : (
-                    <ArrowDownCircle size={24} />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-black text-foreground text-lg leading-tight tracking-tight truncate">
-                    {movement.type === "BALANCE"
-                      ? movement.quantity > 0
-                        ? `+ ${movement.quantity}`
-                        : `${movement.quantity}`
-                      : movement.type === "IN"
-                      ? `+ ${movement.quantity}`
-                      : `- ${movement.quantity}`}{" "}
-                    <span className="text-[10px] text-muted-foreground font-bold uppercase ml-1 opacity-60">
-                      {selectedUnit || "un"}
-                    </span>
-                  </h4>
-                  <p className="text-[10px] font-bold text-muted-foreground flex items-center gap-1.5 mt-1 uppercase tracking-wider truncate">
-                    <Calendar size={10} className="text-primary" />{" "}
-                    {formatDate(movement.createdAt)}
-                  </p>
-                </div>
+                  {style.label}
+                </Badge>
               </div>
-              <Badge
-                className={`font-black text-[9px] tracking-[0.15em] px-2 py-0.5 border-none shadow-sm shrink-0 whitespace-nowrap ${
-                  movement.type === "IN" ||
-                  (movement.type === "BALANCE" && movement.quantity > 0)
-                    ? "bg-emerald-500/10 text-emerald-500"
-                    : movement.type === "OUT" ||
-                      (movement.type === "BALANCE" && movement.quantity < 0)
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {movement.type === "BALANCE"
-                  ? "BALANÇO"
-                  : movement.type === "IN"
-                  ? "ENTRADA"
-                  : "SAÍDA"}
-              </Badge>
-            </div>
 
-            <div className="space-y-2 pt-4 border-t border-border/50">
-              {movement.type === "IN" ? (
-                <>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                      <User size={12} className="text-primary" /> Fornecedor
+              {/* Informações adicionais */}
+              <div className="mt-6 pt-5 border-t border-border/60 space-y-3 text-[13px]">
+                {isIn && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                        <User size={15} className="text-primary" /> Fornecedor
+                      </span>
+                      <span className="font-semibold truncate max-w-[220px] text-right">
+                        {movement.supplier?.name || "—"}
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {isBalance && (
+                  <div className="flex justify-between py-1">
+                    <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                      <Scale size={15} className="text-primary" /> Tipo
                     </span>
-                    <span className="text-foreground font-black truncate max-w-[200px]">
-                      {movement.supplier?.name || "---"}
+                    <span className="font-semibold text-violet-600 dark:text-violet-400">
+                      Ajuste Manual de Estoque
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                      <FileText size={12} className="text-primary" /> CPF/CNPJ
+                )}
+
+                {isOut && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                      <Hash size={15} className="text-primary" /> Motivo
                     </span>
-                    <span className="text-foreground font-black">
-                      {movement.supplier?.identification
-                        ? formatDocument(movement.supplier.identification)
-                        : "---"}
+                    <span className="font-medium text-right">
+                      {movement.reason || "Consumo interno / Venda"}
                     </span>
                   </div>
-                </>
-              ) : movement.type === "BALANCE" ? (
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                    <Scale size={12} className="text-primary" /> Status
-                  </span>
-                  <span className="text-foreground font-black">
-                    Ajuste de Estoque
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground font-bold flex items-center gap-2 uppercase tracking-tight">
-                    <Hash size={12} className="text-primary" /> Motivo / Ref
-                  </span>
-                  <span className="text-foreground font-black">
-                    {movement.reason || "Consumo de Venda"}
-                  </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

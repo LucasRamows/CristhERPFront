@@ -1,28 +1,28 @@
 import { Plus } from "lucide-react";
-import { SearhListPicker } from "../../../../components/shared/SearhListPicker";
-import type { IngredientResponse } from "../../../../services/inventory/inventory.service";
+import { SearchListPicker } from "../../../../components/shared/SearchListPicker";
+import type { ItemResponse } from "../../../../services/inventory/inventory.service";
 
 interface Props {
-  ingredients: IngredientResponse[];
-  handleAddIngredient: (item: IngredientResponse) => void;
-  setIsCreateIngredientOpen: (val: boolean) => void;
+  items: ItemResponse[];
+  handleAddItem: (item: ItemResponse) => void;
+  setIsCreateItemOpen: (val: boolean) => void;
 }
 
 export function EntrySidebar({
-  ingredients,
-  handleAddIngredient,
-  setIsCreateIngredientOpen,
+  items,
+  handleAddItem,
+  setIsCreateItemOpen,
 }: Props) {
   return (
     <aside className="lg:w-[340px] shrink-0 border-t lg:border-t-0 lg:border-l border-border bg-card">
       <div className="p-4 sm:p-5 flex flex-col gap-5 h-full overflow-y-auto custom-scrollbar">
         <div>
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-3">
-            Adicionar Insumo
+            Adicionar Item
           </p>
-          <SearhListPicker
-            items={ingredients}
-            onSelect={(item) => item && handleAddIngredient(item)}
+          <SearchListPicker
+            items={items}
+            onSelect={(item) => item && handleAddItem(item)}
             placeholder="Buscar por nome…"
             searchKeys={["name"]}
             avatarText={(item) => item.name.charAt(0).toUpperCase()}
@@ -32,7 +32,7 @@ export function EntrySidebar({
         </div>
 
         <button
-          onClick={() => setIsCreateIngredientOpen(true)}
+          onClick={() => setIsCreateItemOpen(true)}
           className="w-full py-5 border-2 border-dashed border-border rounded-[24px] flex flex-col items-center gap-2.5 text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-all group active:scale-[0.98]"
         >
           <div className="w-10 h-10 bg-muted rounded-[16px] flex items-center justify-center group-hover:bg-muted transition-colors">
@@ -44,7 +44,7 @@ export function EntrySidebar({
           <span className="font-black text-[10px] uppercase tracking-widest text-center leading-relaxed">
             Criar Novo
             <br />
-            Insumo
+            Item
           </span>
         </button>
 

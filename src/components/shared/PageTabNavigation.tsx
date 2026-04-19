@@ -11,7 +11,7 @@ export interface PageTabNavigationProps {
   tabs: TabItem[];
   activeTab: string;
   onTabChange: (id: string) => void;
-  className?: string; // Classes adicionais para o wrapper
+  className?: string;
 }
 
 export function PageTabNavigation({
@@ -22,7 +22,7 @@ export function PageTabNavigation({
 }: PageTabNavigationProps) {
   return (
     <div
-      className={`flex h-12 md:h-14 w-fit items-center justify-center rounded-xl bg-card p-1 md:p-1.5 text-primary overflow-x-auto hide-scrollbar ${className}`}
+      className={`flex h-12 md:h-14 w-fit items-center justify-center rounded-xl bg-muted p-1 md:p-1.5 text-primary overflow-x-auto hide-scrollbar ${className}`}
     >
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;

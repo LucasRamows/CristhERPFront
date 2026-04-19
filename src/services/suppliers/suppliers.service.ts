@@ -4,7 +4,7 @@ import api from "../api";
 export interface SupplierResponse {
   id: string;
   name: string;
-  contactPerson?: string;
+  categoryId: string | null;
   email?: string;
   phone?: string;
   identification?: string;

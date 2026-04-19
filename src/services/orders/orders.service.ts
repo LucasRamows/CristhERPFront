@@ -4,7 +4,7 @@ export interface OpenOrdersResponse {
   id: string;
   name: string;
   restaurantId: string;
-  orderType: string;
+  orderType: "TABLE" | "CARD" | "COUNTER" | "DELIVERY";
   reference: string;
   status: string;
   sale_date: string;
@@ -169,7 +169,14 @@ export const ordersService = {
   },
 
   async getDayOrders(date: string): Promise<DayOrdersResponse[]> {
-    const { data } = await api.get<DayOrdersResponse[]>(`/orders/day-orders?date=${date}`);
+    const { data } = await api.get<DayOrdersResponse[]>(
+      `/orders/day-orders?date=${date}`,
+    );
+    return data;
+  },
+
+  async getOrderById(id: string): Promise<DayOrdersResponse> {
+    const { data } = await api.get<DayOrdersResponse>(`/orders/${id}`);
     return data;
   },
 };

@@ -1,26 +1,32 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import api from "../services/api"; // ATENÇÃO: Importe a sua configuração do Axios aqui
-import type { ClassItem } from "../_root/components/settings/SettingsDataClassesCard";
+import api from "../services/api";
+import type { Category } from "../components/shared/CategoryFilter";
 
 export interface User {
   id: string;
   name: string;
   email: string;
   role: "ADMIN" | "OWNER" | "MANAGER" | "CASHIER" | "WAITER";
-  restaurantId?: string;
-  restaurant?: {
+  businessId?: string;
+  business?: {
+    id: string;
+    businessName: string;
     corporateName: string;
     documentCnpj: string;
-    email: string;  
-    id: string;
+    email: string;
     phone: string;
     plan: string;
-    restaurantName: string;
-    totalTables: number;
-    SupplierCategories: ClassItem[];
-    ProductCategories: ClassItem[];
-  };  
+    businessType: string;
+    settings?: {
+      TOTAL_TABLES?: number;
+      // Você pode adicionar outras chaves aqui no futuro, ex:
+      // THEME_MODE?: string;
+      [key: string]: any;
+    };
+    SupplierCategories: Category[];
+    ProductCategories: Category[];
+  };
 }
 
 interface DataContextType {
@@ -31,6 +37,10 @@ interface DataContextType {
   isAuthenticated: boolean;
   logout: () => Promise<void>;
   getHomePath: (role: User["role"]) => string;
+  updateProductCategoryCount: (
+    categoryId: string,
+    categoryName: string,
+  ) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -57,15 +67,18 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         await refreshData();
       } catch (error) {
-        console.error("Sessão expirada ou não autenticado (sem cookie válido).");
+        console.error(
+          "Sessão expirada ou não autenticado (sem cookie válido).",
+        );
         setUser(null);
       } finally {
-        setIsLoading(false); 
+        setIsLoading(false);
       }
     };
 
     restoreSession();
   }, []);
+
   const getHomePath = (role: User["role"]) => {
     if (["ADMIN", "OWNER", "MANAGER"].includes(role)) return "/root/dashboard";
     return "/root/sales";
@@ -97,12 +110,46 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
       navigate("/sign-in", { replace: true });
     }
   };
+  const updateProductCategoryCount = (
+    categoryId: string,
+    categoryName: string,
+  ) => {
+    setUser((prevUser) => {
+      if (!prevUser || !prevUser.business) return prevUser;
 
+      const currentCategories = prevUser.business.ProductCategories || [];
+      const exists = currentCategories.find((c) => c.id === categoryId);
+
+      let newCategories;
+
+      if (exists) {
+        newCategories = currentCategories.map((c) =>
+          c.id === categoryId
+            ? { ...c, _count: { products: (c._count?.products || 0) + 1 } }
+            : c,
+        );
+      } else {
+        newCategories = [
+          ...currentCategories,
+          { id: categoryId, name: categoryName, _count: { products: 1 } },
+        ];
+      }
+
+      return {
+        ...prevUser,
+        business: {
+          ...prevUser.business,
+          ProductCategories: newCategories,
+        },
+      };
+    });
+  };
   return (
     <DataContext.Provider
       value={{
         user,
         setUser,
+        updateProductCategoryCount,
         refreshData,
         isLoading,
         isAuthenticated: !!user,
@@ -124,12 +171,30 @@ export const useData = () => {
 };
 
 export const useAuthenticatedUser = () => {
-  const data = useData();
-  if (!data.user) {
+  const context = useData();
+
+  if (!context.user) {
     throw new Error("useAuthenticatedUser foi chamado sem um usuário logado.");
   }
 
-  return { ...data, data: data.user };
+  const user = context.user;
+  const business = user.business;
+  const settings = business?.settings;
+
+  return {
+    ...context, // Mantém logout, refreshData, getHomePath, etc.
+    user: user, // O objeto completo, caso precise
+    data: user, // Mantendo a compatibilidade (ex: const { data } = useAuthenticatedUser())
+
+    totalTables: settings?.TOTAL_TABLES ?? 24,
+    categories: user.business?.ProductCategories ?? [],
+    supplierCategories: user.business?.SupplierCategories ?? [],
+    businessName: business?.businessName,
+    businessPlan: business?.plan,
+    businessType: business?.businessType,
+    role: user.role,
+    updateProductCategoryCount: context.updateProductCategoryCount,
+  };
 };
 
 export default DataProvider;

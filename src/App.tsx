@@ -4,13 +4,15 @@ import RootLayout from "./_root/RootLayout";
 
 import RequireAuth from "./_auth/components/RequireAuth";
 import { SignInForm } from "./_auth/forms/SigninForm";
-import RootDashboardPage from "./_root/pages/RootDashboardPage";
-import RootInventoryPage from "./_root/pages/RootInventoryPage";
-import RootMenuPage from "./_root/pages/RootMenuPage";
+import RootDashboardPage from "./_root/dashboard/RootDashboardPage";
+import FinancialManagementPage from "./_root/pages/RootFinancialManagementPage";
+import RootPassbookPage from "./_root/passbook/RootPassBookPage";
+import RootPdvPage from "./_root/pdv/RootPdvPage";
+import RootMenuPage from "./_root/products/RootProductsPage";
 import RootProfilePage from "./_root/pages/RootProfilePage";
-import RootSettingsPage from "./_root/pages/RootSettingsPage";
+import RootSettingsPage from "./_root/settings/RootSettingsPage";
 import RootStaffPage from "./_root/pages/RootStaffPage";
-import RootSuppliersPage from "./_root/pages/RootSuppliersPage";
+import RootSuppliersPage from "./_root/supplier/RootSuppliersPage";
 import SystemLayout from "./_system/SystemLayout";
 import SystemUsersPage from "./_system/pages/SystemUsersPage";
 import NotAuthorizedPage from "./_system/shared/NotAuthorizedPage";
@@ -18,9 +20,6 @@ import NotFound from "./_system/shared/NotFound";
 import { AlertProvider } from "./components/shared/AlertProvider";
 import DataProvider from "./contexts/DataContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import FinancialManagementPage from "./_root/pages/RootFinancialManagementPage";
-import RootPdvPage from "./_root/pages/RootPdvPage";
-import RootPassbookPage from "./_root/pages/RootPassBookPage";
 
 const App = () => {
   return (
@@ -36,7 +35,6 @@ const App = () => {
               <Route path="/root" element={<RootLayout />}>
                 <Route path="dashboard" element={<RootDashboardPage />} />
                 <Route path="menu" element={<RootMenuPage />} />
-                <Route path="inventory" element={<RootInventoryPage />} />
                 <Route path="supplier" element={<RootSuppliersPage />} />
                 <Route element={<RequireAuth minRole="MANAGER" />}>
                   <Route element={<RequireAuth minRole="OWNER" />}>

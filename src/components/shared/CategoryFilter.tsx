@@ -1,12 +1,16 @@
 import React, { useRef, useState } from "react";
-import { type ProductsResponse } from "../../services/products/products.service";
-import { ProductCard } from "../../_root/components/menu/MenuProductCard";
+import { type ProductsResponse } from "../../services/products/products.types";
+import { ProductCard } from "./ProductCard";
+import { useAuthenticatedUser } from "../../contexts/DataContext";
 
 export interface Category {
   id: string;
   name: string;
   icon?: React.ReactNode;
-  _count?: { products: number };
+  _count?: {
+    products?: number;
+    suppliers?: number;
+  };
 }
 
 interface CategoryProductSelectorProps {
@@ -23,7 +27,8 @@ export const CategoryProductSelector: React.FC<
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_ID);
   const [isAnimating, setAnimating] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
-
+  const { businessType } = useAuthenticatedUser();
+  const isRetail = businessType === "RETAIL";
   const allCategories: Category[] = [
     { id: ALL_ID, name: "TODOS", _count: { products: products.length } },
     ...categories,
@@ -45,8 +50,8 @@ export const CategoryProductSelector: React.FC<
       : products.filter((p) => p.categoryId === selectedCategory);
 
   return (
-    <div className="w-full">
-      <div className="flex gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar">
+    <div className="w-full h-full flex flex-col overflow-hidden">
+      <div className="flex shrink-0 gap-2 overflow-x-auto pb-4 mb-4 hide-scrollbar">
         {allCategories.map((cat) => {
           const isActive = selectedCategory === cat.id;
           return (
@@ -69,7 +74,7 @@ export const CategoryProductSelector: React.FC<
                       : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {cat._count.products}
+                  {cat._count.products || 0}
                 </span>
               )}
             </button>
@@ -81,7 +86,7 @@ export const CategoryProductSelector: React.FC<
       <div
         ref={listRef}
         style={{ opacity: isAnimating ? 0.5 : 1 }}
-        className="w-full transition-opacity duration-150"
+        className="flex-1 overflow-y-auto w-full transition-opacity duration-150 custom-scrollbar pr-1"
       >
         {filteredProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
@@ -92,6 +97,7 @@ export const CategoryProductSelector: React.FC<
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
+                isRetail={isRetail}
                 item={product}
                 formatMoney={(val) =>
                   new Intl.NumberFormat("pt-BR", {

@@ -21,7 +21,7 @@ import {
   ordersService,
   type DayOrdersResponse,
 } from "../../../services/orders/orders.service";
-import { DashboardStatCard } from "../dashboard/DashboardStatCard";
+import { StatCard } from "../../../components/shared/StatCard";
 import { formatMoney } from "../../../lib/utils";
 import { format } from "date-fns";
 
@@ -137,7 +137,7 @@ export default function FinancialDailyCashFlowPanel({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {/* Card 1: Faturamento Total */}
 
-        <DashboardStatCard
+        <StatCard
           title="Faturamento Hoje"
           value={formatMoney(totalRevenue)}
           icon={<DollarSign size={20} />}
@@ -145,7 +145,7 @@ export default function FinancialDailyCashFlowPanel({
         />
 
         {/* Card 2: Volume de Transações */}
-        <DashboardStatCard
+        <StatCard
           title="Volume de Vendas"
           value={totalTransactions}
           icon={<CreditCard size={20} />}
@@ -153,7 +153,7 @@ export default function FinancialDailyCashFlowPanel({
         />
 
         {/* Card 3: Ticket Médio */}
-        <DashboardStatCard
+        <StatCard
           title="Ticket Médio"
           value={formatMoney(averageTicket)}
           icon={<DollarSign size={20} />}

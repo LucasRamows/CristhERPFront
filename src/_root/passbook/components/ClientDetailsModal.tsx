@@ -21,22 +21,19 @@ import { PassbookReceiptWrapper } from "./wrappers/PassbookReceiptWrapper";
 
 export function ClientDetailsModal() {
   const {
-    // Dados Principais
     activeClient,
     setActiveClientId,
-    ledgerEntries, // Substitui a antiga prop "transactions"
-
-    // Ações de UI e Negócio
-    toggleBlockAction, // Substitui toggleBloqueio
-    openPaymentModal, // Substitui setIsPaymentModalOpen
-    deleteTransactionAction, // Substitui handleDeleteTransaction
+    ledgerEntries,
+    toggleBlockAction,
+    openPaymentModal,
+    deleteTransactionAction,
     handleViewNote,
     isLoadingOrder,
   } = usePassbook();
 
   return (
     <div
-      className={`flex-1 flex-col bg-background overflow-hidden relative ${
+      className={`flex-1 flex-col bg-background relative overflow-hidden ${
         !activeClient ? "hidden lg:flex" : "flex"
       }`}
     >
@@ -56,7 +53,9 @@ export function ClientDetailsModal() {
         </div>
       ) : (
         // PERFIL DO CLIENTE
-        <div className="h-full flex flex-col animate-fade-in p-4 md:p-8 gap-3">
+        // AJUSTE 1: Adicionado overflow-hidden para travar o crescimento da div pai
+        <div className="h-full flex flex-col animate-fade-in p-4 md:p-8 gap-3 overflow-hidden">
+          
           {/* HEADER DO CLIENTE */}
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 shrink-0 bg-background">
             <div className="flex items-center gap-3 w-full md:w-auto">
@@ -122,7 +121,9 @@ export function ClientDetailsModal() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-3">
+
+          {/* AJUSTE 2: Adicionado shrink-0 nesta div para que os cards e botões não encolham caso a lista seja muito grande */}
+          <div className="flex flex-col gap-3 shrink-0">
             <div className="bg-card rounded-2xl md:rounded-[32px] p-5 md:p-8 relative overflow-hidden shadow-sm border border-border">
               <div className="absolute top-0 right-0 w-40 h-40 md:w-64 md:h-64 bg-decoration opacity-[0.03] rounded-full blur-3xl translate-x-1/2 -translate-y-1/2"></div>
 
@@ -178,7 +179,7 @@ export function ClientDetailsModal() {
               </div>
             </div>
 
-            {/* 5. BOTÕES DE AÇÃO RÁPIDA */}
+            {/* BOTÕES DE AÇÃO RÁPIDA */}
             <div className="grid grid-cols-2 gap-2 md:gap-4">
               <Button
                 onClick={() => openPaymentModal()}
@@ -201,24 +202,25 @@ export function ClientDetailsModal() {
               </Button>
             </div>
           </div>
-          {/* CONTEÚDO SCROLLÁVEL */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* 4. HISTÓRICO DE MOVIMENTAÇÃO (EXTRATO) */}
+
+          {/* AJUSTE 3: O "min-h-0" é o segredo mágico aqui. Ele diz ao flexbox: "você pode encolher se faltar espaço, use o scroll ao invés de empurrar a tela para baixo". */}
+          <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar pr-1 pb-4">
+            
             <div>
-              <h3 className="text-xl font-black text-primary mb-4 flex items-center gap-2">
+              <h3 className="text-xl font-black text-primary mb-4 flex items-center gap-2 mt-2">
                 <History className="text-primary" /> Extrato do Cliente
               </h3>
 
               <div className="card-default overflow-hidden">
-                <div className="overflow-x-auto custom-scrollbar">
-                  <div className="min-w-[800px]">
-                    {/* Header — agora visível sempre, graças ao scroll horizontal */}
-                    <div className="grid grid-cols-12 gap-4 p-4 md:p-6 border-b border-border bg-muted/50 text-muted-foreground font-bold text-sm uppercase tracking-wider">
-                      <div className="col-span-3">Data / Hora</div>
-                      <div className="col-span-4">Descrição</div>
-                      <div className="col-span-2 text-center">Operador</div>
-                      <div className="col-span-2 text-right">Valor</div>
-                      <div className="col-span-1 text-center">Ação</div>
+                <div className="overflow-x-hidden md:overflow-x-auto custom-scrollbar">
+                  <div className="min-w-full">
+                    {/* Header */}
+                    <div className="grid grid-cols-12 gap-2 md:gap-4 p-3 md:p-6 border-b border-border bg-muted/50 text-muted-foreground font-bold text-xs md:text-sm uppercase tracking-wider">
+                      <div className="col-span-5 md:col-span-3">Data / Hora</div>
+                      <div className="hidden md:block md:col-span-4">Descrição</div>
+                      <div className="hidden md:block md:col-span-2 text-center">Operador</div>
+                      <div className="col-span-5 md:col-span-2 text-right">Valor</div>
+                      <div className="col-span-2 md:col-span-1 text-center">Ação</div>
                     </div>
 
                     <div className="flex flex-col">
@@ -226,10 +228,9 @@ export function ClientDetailsModal() {
                         ledgerEntries.map((tx) => (
                           <div
                             key={tx.id}
-                            className="grid grid-cols-12 items-center gap-4 p-4 md:p-6 border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
+                            className="grid grid-cols-12 items-center gap-2 md:gap-4 p-3 md:p-6 border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
                           >
-                            {/* Delete button + date */}
-                            <div className="flex items-center gap-3 col-span-3">
+                            <div className="flex items-center gap-2 md:gap-3 col-span-5 md:col-span-3">
                               <Button
                                 variant="destructive"
                                 size="icon"
@@ -239,10 +240,11 @@ export function ClientDetailsModal() {
                                     tx.orderId,
                                   )
                                 }
+                                className="w-8 h-8 md:w-10 md:h-10 shrink-0"
                               >
-                                <Trash size={16} />
+                                <Trash size={14} className="md:w-4 md:h-4" />
                               </Button>
-                              <span className="text-sm font-semibold text-muted-foreground">
+                              <span className="text-xs md:text-sm font-semibold text-muted-foreground">
                                 {formatTime(
                                   tx.order?.sale_date
                                     ? tx.order.sale_date
@@ -251,8 +253,7 @@ export function ClientDetailsModal() {
                               </span>
                             </div>
 
-                            {/* Icon + description */}
-                            <div className="flex items-center gap-2 col-span-4 min-w-0">
+                            <div className="hidden md:flex items-center gap-2 col-span-4 min-w-0">
                               <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                   tx.type === "DEBT"
@@ -271,14 +272,12 @@ export function ClientDetailsModal() {
                               </span>
                             </div>
 
-                            {/* Source */}
-                            <span className="text-sm font-semibold text-muted-foreground col-span-2 text-center">
+                            <span className="hidden md:block text-sm font-semibold text-muted-foreground col-span-2 text-center">
                               {tx.operatorId ? "Sistema" : "Manual"}
                             </span>
 
-                            {/* amount */}
                             <span
-                              className={`font-bold text-lg col-span-2 text-right truncate block ${
+                              className={`font-bold text-sm md:text-lg col-span-5 md:col-span-2 text-right truncate block ${
                                 tx.type === "DEBT"
                                   ? "text-destructive"
                                   : "text-green-500"
@@ -288,16 +287,15 @@ export function ClientDetailsModal() {
                               {Number(tx.amount).toFixed(2)}
                             </span>
 
-                            {/* View note button */}
                             <Button
                               size="icon"
                               disabled={tx.type !== "DEBT" || isLoadingOrder}
                               onClick={() => {
                                 handleViewNote(tx);
                               }}
-                              className="col-span-1 justify-self-center"
+                              className="col-span-2 md:col-span-1 justify-self-center w-8 h-8 md:w-10 md:h-10 shrink-0"
                             >
-                              <Eye size={16} />
+                              <Eye size={14} className="md:w-4 md:h-4" />
                             </Button>
                           </div>
                         ))

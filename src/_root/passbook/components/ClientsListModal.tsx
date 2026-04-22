@@ -1,18 +1,8 @@
 import { Ban, CheckCircle } from "lucide-react";
-import type { CostomersResponse } from "../../../services/costomers/customers.service";
+import { usePassbook } from "../hooks/PassbookContext";
 
-export interface PassbookClientListPanelProps {
-  clients: CostomersResponse[];
-  activeClientId: string | null;
-  setActiveClientId: (id: string | null) => void;
-}
-
-export function PassbookClientListPanel({
-  clients,
-  activeClientId,
-  setActiveClientId,
-}: PassbookClientListPanelProps) {
-
+export function ClientsListModal() {
+  const { clients, activeClientId, setActiveClientId } = usePassbook();
 
   return (
     <div

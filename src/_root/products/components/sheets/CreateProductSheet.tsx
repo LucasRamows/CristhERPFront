@@ -1,41 +1,33 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-} from "../../../../components/ui/sheet";
+// src/_features/inventory/components/sheets/CreateProductSheet.tsx
+import { useState, type ReactNode } from "react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "../../../../components/ui/sheet";
 import { CreateProductForm } from "../form/CreateProductForm";
-import { useInventoryContext } from "../../hooks/InventoryContext";
-import type { CreateProductSheetProps } from "../../types/product.types";
 
-export function CreateProductSheet({
-  open: openProp,
-  onOpenChange: onOpenChangeProp,
-  onSuccess: onSuccessProp,
-}: CreateProductSheetProps) {
-  const {
-    isRetail,
-    isCreateProductOpen,
-    setIsCreateProductOpen,
-    handleCreateProductSuccess,
-  } = useInventoryContext();
+interface CreateProductSheetProps {
+  children?: ReactNode;
+}
 
-  const open = openProp ?? isCreateProductOpen;
-  const onOpenChange = onOpenChangeProp ?? setIsCreateProductOpen;
-  const onSuccess = onSuccessProp ?? handleCreateProductSuccess;
+export function CreateProductSheet({ children }: CreateProductSheetProps) {
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      {/* O gatilho envolve o botão! */}
+      {children && <SheetTrigger asChild>{children}</SheetTrigger>}
+
       <SheetContent
         side="right"
-        className="w-[90%] sm:max-w-130 p-0 flex flex-col h-full bg-white border-l border-gray-100 outline-none"
+        className="w-[90%] sm:max-w-130 p-0 flex flex-col h-full bg-white border-l border-gray-100 outline-none z-[110]"
       >
         <SheetTitle className="sr-only">Criar Novo Produto</SheetTitle>
-
-        <CreateProductForm
-          isRetail={isRetail}
-          onSuccess={onSuccess}
-          onCancel={() => onOpenChange(false)}
-        />
+        
+        {/* Renderização Condicional: Garante que o form nasça limpo toda vez que abrir */}
+        {isOpen && (
+          <CreateProductForm
+            onCancel={() => setIsOpen(false)} 
+            onSuccessClose={() => setIsOpen(false)} // Fecha quando der sucesso
+          />
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -13,7 +13,7 @@ import {
 import { formatMoney } from "../../../../lib/utils";
 import { ordersService } from "../../../../services/orders/orders.service";
 import type { OrderType, PdvEntity } from "../../../types/PdvEntity";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 
 export function HistorySheet() {
   const { openOrders, refreshData, handleEntityClick } = usePDV();

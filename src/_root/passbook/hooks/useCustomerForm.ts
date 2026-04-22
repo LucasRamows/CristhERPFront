@@ -1,13 +1,14 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   formatDocument,
   removeMask,
 } from "../../../lib/utils";
+import type { CostomersResponse } from "../../../services/costomers/customer.type";
 import {
   costomersService,
-  type CostomersResponse,
 } from "../../../services/costomers/customers.service";
 import {
   customerSchema,
@@ -30,7 +31,6 @@ export function useCustomerForm({
   onOpenChange,
 }: UseCustomerFormProps) {
   const isEdit = !!initialData;
-  const [isSuccess, setIsSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -61,7 +61,7 @@ export function useCustomerForm({
     setError(null);
   }, [open, initialData, form]);
 
-  const handleSubmit = async (values: CustomerFormType) => {
+ const handleSubmit = async (values: CustomerFormType) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -78,39 +78,31 @@ export function useCustomerForm({
       let responseData: CostomersResponse;
 
       if (isEdit && initialData) {
+        // MODO EDIÇÃO
         responseData = await costomersService.updateCustomer(
           initialData.id,
           payload,
         );
 
+        // Atualiza a lista substituindo o cliente antigo pelo editado
         setClients((prev) =>
           prev.map((c) =>
             c.id === initialData.id ? { ...c, ...responseData } : c,
           ),
         );
       } else {
-        await costomersService.createCustomer(payload);
-        responseData = {
-          id: Math.random().toString(36).substring(7),
-          fullName: values.fullName,
-          nickname: values.nickname,
-          phone: values.phone,
-          cpf: values.cpf,
-          creditLimit: values.creditLimit,
-          isBlocked: false,
-          saldoDevedor: 0,
-          settlementDate: values.settlementDate,
-        } as CostomersResponse;
+        // MODO CRIAÇÃO
+        // 1. Pegamos a resposta real da API (que já vem com o ID do banco)
+        responseData = await costomersService.createCustomer(payload);
+        
+        // 2. 🚀 A MÁGICA AQUI: Adicionamos o novo cliente no topo da lista!
+        setClients((prev) => [responseData, ...prev]);
       }
 
       onSuccess(responseData);
-      setIsSuccess(true);
+      toast.success(`Cliente ${isEdit ? "atualizado" : "cadastrado"} com sucesso!`);
 
-      setTimeout(() => {
-        setIsSuccess(false);
-        onOpenChange(false);
-        if (!isEdit) form.reset();
-      }, 2000);
+      onOpenChange(false);
     } catch (err: any) {
       console.error("Erro ao salvar cliente:", err);
       setError(
@@ -125,7 +117,6 @@ export function useCustomerForm({
 
   return {
     form,
-    isSuccess,
     isLoading,
     error,
     handleSubmit,

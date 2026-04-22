@@ -4,7 +4,7 @@ import RootLayout from "./_root/RootLayout";
 
 import RequireAuth from "./_auth/components/RequireAuth";
 import { SignInForm } from "./_auth/forms/SigninForm";
-import RootDashboardPage from "./_root/dashboard/RootDashboardPage";
+import RootDashboardPage from "./_root/dashboard/DashboardPage";
 import FinancialManagementPage from "./_root/pages/RootFinancialManagementPage";
 import RootPassbookPage from "./_root/passbook/RootPassBookPage";
 import RootPdvPage from "./_root/pdv/RootPdvPage";

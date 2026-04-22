@@ -4,9 +4,9 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { CartItem } from "../../../_root/pdv/utils/pdv.types";
-import type { PdvEntity } from "../../../_root/types/PdvEntity";
-import type { User } from "../../../contexts/DataContext";
+import type { CartItem } from "../../_root/pdv/utils/pdv.types";
+import type { PdvEntity } from "../../_root/types/PdvEntity";
+import type { User } from "../../contexts/DataContext";
 
 const styles = StyleSheet.create({
   page: {

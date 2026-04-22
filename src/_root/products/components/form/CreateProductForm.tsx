@@ -1,15 +1,24 @@
 "use client";
 
-import { ChevronLeft, Info, Package, RefreshCw, Weight } from "lucide-react";
+import {
+  ChevronLeft,
+  Info,
+  Package,
+  RefreshCw,
+  Weight,
+  Layers,
+  Box,
+  Archive,
+  ArchiveX,
+  Loader2,
+} from "lucide-react";
 import { Controller } from "react-hook-form";
 import { useAuthenticatedUser } from "../../../../contexts/DataContext";
-import { useCreateProductForm } from "../../hooks/useCreateProductForm";
-import { UniversalImageUploader } from "../../../../_features/storage/UniversalmageUploader";
+import { UniversalImageUploader } from "../../../../components/shared/UniversalmageUploader";
 import { BrInput } from "../../../../components/ui/BrInput";
 import { Input } from "../../../../components/ui/input";
+import { Switch } from "../../../../components/ui/switch";
 import { CompositionSection } from "../shared/CompositionSection";
-import LoadingComponent from "../../../../components/shared/LoadingComponent";
-import type { CreateProductFormProps } from "../../types/product.types";
 import { getReference } from "../../../../lib/utils";
 import {
   Tooltip,
@@ -17,11 +26,21 @@ import {
   TooltipTrigger,
 } from "../../../../components/ui/tooltip";
 
+import { useInventoryContext } from "../../hooks/new/InventoryContext";
+import { useProductForm } from "../../hooks/new/useEditForm";
+import { Button } from "../../../../components/ui/button";
+
+interface CreateProductFormProps {
+  onCancel: () => void;
+  onSuccessClose: () => void;
+}
+
 export function CreateProductForm({
-  isRetail,
   onCancel,
+  onSuccessClose,
 }: CreateProductFormProps) {
   const { categories } = useAuthenticatedUser();
+  const { isRetail } = useInventoryContext();
 
   const {
     form,
@@ -32,7 +51,13 @@ export function CreateProductForm({
     addIngredient,
     updateQuantity,
     removeIngredient,
-  } = useCreateProductForm();
+  } = useProductForm({ onSuccessClose });
+
+  const isSimpleProduct = form.watch("isSimpleProduct") ?? false;
+  const manageStock = form.watch("manageStock") ?? true;
+
+  const showMinStock =
+    (isRetail && manageStock) || (!isRetail && isSimpleProduct);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -79,23 +104,128 @@ export function CreateProductForm({
               />
             </div>
 
-            {/* Preço */}
-            <div className="space-y-1.5">
-              <label className="text-sm text-gray-600 mb-1 block">
-                Preço de Venda
-              </label>
-              <Controller
-                name="price"
-                control={form.control}
-                render={({ field }) => (
-                  <BrInput
-                    prefix="R$"
-                    decimals={2}
-                    value={field.value}
-                    onChange={field.onChange}
+            {/* TOGGLES DINÂMICOS (VAREJO VS RESTAURANTE) */}
+            {isRetail ? (
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl transition-all">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2 rounded-lg ${
+                      manageStock
+                        ? "bg-emerald-100 text-emerald-600"
+                        : "bg-gray-200 text-gray-500"
+                    }`}
+                  >
+                    {manageStock ? (
+                      <Archive size={18} />
+                    ) : (
+                      <ArchiveX size={18} />
+                    )}
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-black text-gray-900 leading-none">
+                      Controlar Estoque
+                    </p>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {manageStock
+                        ? "Gera item de inventário automático."
+                        : "Produto avulso/serviço. Não deduz do estoque."}
+                    </p>
+                  </div>
+                </div>
+                <Controller
+                  name="manageStock"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value ?? true}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-xl transition-all">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`p-2 rounded-lg ${
+                      isSimpleProduct
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-orange-100 text-orange-600"
+                    }`}
+                  >
+                    {isSimpleProduct ? <Box size={18} /> : <Layers size={18} />}
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-black text-gray-900 leading-none">
+                      Controle Individual (Produto Simples)
+                    </p>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {isSimpleProduct
+                        ? "Este produto tem seu próprio estoque direto."
+                        : "O estoque depende dos insumos (Receita)."}
+                    </p>
+                  </div>
+                </div>
+                <Controller
+                  name="isSimpleProduct"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value ?? false}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Preço e Estoque Mínimo */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-sm text-gray-600 mb-1 block">
+                  Preço de Venda
+                </label>
+                <Controller
+                  name="price"
+                  control={form.control}
+                  render={({ field }) => (
+                    <BrInput
+                      prefix="R$"
+                      decimals={2}
+                      value={field.value}
+                      onChange={field.onChange}
+                      className="flex items-center w-full h-12 px-5 border border-gray-200 rounded-xl focus-within:border-primary transition-all"
+                    />
+                  )}
+                />
+              </div>
+
+              {showMinStock && (
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
+                  <label className="text-sm text-gray-600 mb-1 block">
+                    Estoque Mínimo
+                  </label>
+                  <Controller
+                    name="minStock"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        className="w-full h-12 px-5 pr-12 border border-gray-200 rounded-xl focus:border-primary outline-none font-mono"
+                        value={field.value || ""}
+                        onChange={(event) => {
+                          const value = (event.target as HTMLInputElement)
+                            .value;
+                          field.onChange(
+                            value === "" ? undefined : Number(value),
+                          );
+                        }}
+                        placeholder="0"
+                      />
+                    )}
                   />
-                )}
-              />
+                </div>
+              )}
             </div>
 
             {/* Código + Categoria */}
@@ -149,7 +279,7 @@ export function CreateProductForm({
               </div>
             </div>
 
-            {/* Unidade + Estoque Mínimo (apenas Retail) */}
+            {/* Unidade */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm text-gray-600 mb-1 block">
@@ -188,48 +318,23 @@ export function CreateProductForm({
                   )}
                 />
               </div>
-
-              {isRetail && (
-                <div className="space-y-1.5">
-                  <label className="text-sm text-gray-600 mb-1 block">
-                    Estoque Mínimo
-                  </label>
-                  <Controller
-                    name="minStock"
-                    control={form.control}
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        value={field.value || ""}
-                        onChange={(event) => {
-                          const value = (event.target as HTMLInputElement)
-                            .value;
-                          field.onChange(
-                            value === "" ? undefined : Number(value),
-                          );
-                        }}
-                        placeholder="0"
-                        className="h-12"
-                      />
-                    )}
-                  />
-                </div>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Composição / Insumos - Apenas para produtos não Retail */}
-        {!isRetail && (
-          <CompositionSection
-            ingredients={itemsField}
-            itemsRepo={itemsRepo}
-            onAddIngredient={addIngredient}
-            onUpdateQuantity={updateQuantity}
-            onRemoveIngredient={removeIngredient}
-            title="Composição / Insumos"
-            placeholder="Adicionar insumo à receita..."
-          />
+        {/* Composição / Insumos - Apenas para F&B com receita composta */}
+        {!isRetail && !isSimpleProduct && (
+          <div className="animate-in fade-in slide-in-from-bottom-2">
+            <CompositionSection
+              items={itemsField}
+              itemsRepo={itemsRepo}
+              onAddItem={addIngredient}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeIngredient}
+              title="Composição / Insumos"
+              placeholder="Adicionar insumo à receita..."
+            />
+          </div>
         )}
 
         {/* Descrição */}
@@ -246,13 +351,20 @@ export function CreateProductForm({
 
       {/* Footer Fixo */}
       <div className="p-6 border-t border-gray-100 bg-white">
-        <button
+        <Button
           onClick={form.handleSubmit(handleSubmit)}
           disabled={isLoading}
-          className="w-full h-14 bg-black hover:bg-zinc-900 text-white rounded-xl font-semibold text-base transition-all disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full"
         >
-          {isLoading ? <LoadingComponent /> : "Criar Novo Produto"}
-        </button>
+          {isLoading ? (
+            <>
+              <Loader2 size={20} className="animate-spin" />
+              Criando Produto...
+            </>
+          ) : (
+            "Criar Novo Produto"
+          )}
+        </Button>
       </div>
     </div>
   );

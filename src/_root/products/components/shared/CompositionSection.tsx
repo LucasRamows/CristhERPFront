@@ -5,29 +5,29 @@ import { SearchListPicker } from "../../../../components/shared/SearchListPicker
 import { BrInput } from "../../../../components/ui/BrInput";
 
 interface CompositionItem {
-  ingredientId: string;
+  itemId: string;
   name?: string;
   unit?: string;
   quantity: number | string;
 }
 
 interface CompositionSectionProps {
-  ingredients: CompositionItem[];
+  items: CompositionItem[];
   itemsRepo: any[];
-  onAddIngredient: (item: any) => void;
-  onUpdateQuantity: (ingredientId: string, quantity: number) => void;
-  onRemoveIngredient: (ingredientId: string) => void;
+  onAddItem: (item: any) => void;
+  onUpdateQuantity: (itemId: string, quantity: number) => void;
+  onRemoveItem: (itemId: string) => void;
   title?: string;
   placeholder?: string;
   disabled?: boolean;
 }
 
 export function CompositionSection({
-  ingredients,
+  items,
   itemsRepo,
-  onAddIngredient,
+  onAddItem,
   onUpdateQuantity,
-  onRemoveIngredient,
+  onRemoveItem,
   title = "Composição / Insumos",
   placeholder = "Adicionar insumo à composição...",
   disabled = false,
@@ -47,7 +47,7 @@ export function CompositionSection({
         <div>
           <SearchListPicker
             items={itemsRepo}
-            onSelect={onAddIngredient}
+            onSelect={onAddItem}
             placeholder={placeholder}
             searchKeys={["name"]}
             limit={5}
@@ -69,7 +69,7 @@ export function CompositionSection({
 
         {/* Lista de Insumos Adicionados */}
         <div className="space-y-2">
-          {ingredients.length === 0 ? (
+          {items.length === 0 ? (
             <div className="p-10 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center opacity-40">
               <ShoppingBasket size={32} className="mb-2" />
               <p className="text-[10px] font-black uppercase tracking-widest">
@@ -78,9 +78,9 @@ export function CompositionSection({
             </div>
           ) : (
             <div className="space-y-2">
-              {ingredients.map((ing) => (
+              {items.map((ing) => (
                 <div
-                  key={ing.ingredientId}
+                  key={ing.itemId}
                   className="flex items-center gap-3 p-3 bg-card border border-border rounded-2xl"
                 >
                   <div className="flex-1 min-w-0">
@@ -96,7 +96,7 @@ export function CompositionSection({
                     <BrInput
                       value={Number(ing.quantity)}
                       onChange={(val: number) =>
-                        onUpdateQuantity(ing.ingredientId, val)
+                        onUpdateQuantity(ing.itemId, val)
                       }
                       placeholder="0.000"
                       decimals={3}
@@ -107,7 +107,7 @@ export function CompositionSection({
 
                     <button
                       type="button"
-                      onClick={() => onRemoveIngredient(ing.ingredientId)}
+                      onClick={() => onRemoveItem(ing.itemId)}
                       disabled={disabled}
                       className="w-10 h-10 flex items-center justify-center text-destructive hover:bg-destructive/10 rounded-xl transition-all active:scale-95"
                     >

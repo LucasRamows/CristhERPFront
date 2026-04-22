@@ -10,7 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { User } from "../contexts/DataContext";
-import type { PDVView } from "../_root/pdv/utils/types";
+import type { PDVView } from "../_root/pdv/types/pdv.types";
 
 export interface NavItem {
   name: string;

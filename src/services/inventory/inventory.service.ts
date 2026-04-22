@@ -8,6 +8,7 @@ export interface ItemResponse {
   unit: string;
   currentStock: number;
   minStock: number;
+  productRecipes: any[];
 }
 
 export interface InventoryEntryItemIngredient {
@@ -18,8 +19,8 @@ export interface InventoryEntryItemIngredient {
 
 export interface InventoryEntryItemResponse {
   id: string;
-  ingredientId: string;
-  ingredient?: InventoryEntryItemIngredient;
+  itemId: string;
+  item?: InventoryEntryItemIngredient;
   quantity: number;
   unitPrice: number;
 }

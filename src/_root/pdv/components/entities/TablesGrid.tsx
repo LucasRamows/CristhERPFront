@@ -1,7 +1,7 @@
 // PDV/components/entities/TablesGrid.tsx
 import { AlertCircle, Clock, User } from "lucide-react";
 import { formatDate } from "date-fns";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 import { SearchListPicker } from "../../../../components/shared/SearchListPicker";
 
 export function TablesGrid() {

@@ -1,7 +1,7 @@
 import { Edit2, Loader2, Package, Trash2 } from "lucide-react";
-import { useProductOptions } from "../../hooks/useProductOptions";
+import { useInventoryContext } from "../../hooks/new/InventoryContext";
+import { useProductOptions } from "../../hooks/new/useProductOptions";
 
-import { type ProductsResponse } from "../../../../services/products/products.types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,20 +12,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "../../../../components/ui/alert-dialog";
+import { Badge } from "../../../../components/ui/badge";
 import { ProductSalesChart } from "../shared/ProductSaleChart";
 import { ProductSummary } from "../shared/ProductSummary";
-import { Badge } from "../../../../components/ui/badge";
 
-export default function OptionsView({
-  item,
-  onEditClick,
-  isRetail,
-}: {
-  item: ProductsResponse;
+// Removemos `item` e `isRetail` das Props!
+interface OptionsViewProps {
   onEditClick: () => void;
-  isRetail: boolean;
-}) {
+}
+
+export default function OptionsView({ onEditClick }: OptionsViewProps) {
+  // Puxamos a flag do contexto
+  const { isRetail } = useInventoryContext();
+
+  // Puxamos todo o resto do Hook
   const {
+    item,
     salesData,
     isLoadingStats,
     showDeleteConfirm,
@@ -34,7 +36,11 @@ export default function OptionsView({
     handleDeleteConfirm,
     status,
     isUpdatingStatus,
+    toggleStatus, // <-- Adicionamos o toggleStatus aqui
   } = useProductOptions();
+
+  // Proteção caso o item ainda não tenha carregado
+  if (!item) return null;
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -78,12 +84,17 @@ export default function OptionsView({
           price={item.price}
           status={status}
           isUpdatingStatus={isUpdatingStatus}
-          // onToggleStatus={toggleStatus}
-          isRetail={isRetail}
-          currentStock={item.retailStock}
-          minStock={item.retailMinStock}
+          onToggleStatus={toggleStatus}
+          // Lógica perfeita: Mostra o estoque se Varejo gerenciar estoque OR F&B for Produto Simples
+          showStock={
+            (isRetail && item.manageStock) ||
+            (!isRetail && item.isSimpleProduct)
+          }
+          currentStock={Number(item.retailStock ?? item.productRecipes?.[0]?.item?.currentStock ?? 0)}
+          minStock={Number(item.minStock ?? item.retailMinStock ?? item.productRecipes?.[0]?.item?.minStock ?? 0)}
           isLoadingStock={isLoadingStats}
         />
+
         {/* Ações */}
         <div className="space-y-3">
           <button

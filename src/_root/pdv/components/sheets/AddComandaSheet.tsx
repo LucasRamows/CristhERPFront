@@ -7,7 +7,7 @@ import {
 } from "../../../../components/ui/sheet";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 
 export interface AddComandaSheetProps {
   isOpen: boolean;

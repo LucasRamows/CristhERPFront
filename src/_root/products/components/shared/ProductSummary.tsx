@@ -1,16 +1,22 @@
 "use client";
 
-import { Activity, AlertCircle, DollarSign, Loader2, Package } from "lucide-react";
-import { Card } from "../../../../components/ui/card"; // Ajuste o caminho se necessário
-import { useInventoryContext } from "../../hooks/InventoryContext";
+import {
+  Activity,
+  AlertCircle,
+  DollarSign,
+  Loader2,
+  Package,
+} from "lucide-react";
+import { Card } from "../../../../components/ui/card";
 
 interface ProductSummaryProps {
   price: number | string;
   status: boolean;
   isUpdatingStatus?: boolean;
+  onToggleStatus: () => void; // <-- Recebemos a função do componente pai
 
-  // Props para modo Retail (estoque)
-  isRetail?: boolean;
+  // Props dinâmicas de estoque
+  showStock?: boolean; // <-- Trocamos isRetail por uma flag direta
   currentStock?: number;
   minStock?: number;
   isLoadingStock?: boolean;
@@ -20,14 +26,13 @@ export function ProductSummary({
   price,
   status,
   isUpdatingStatus = false,
-
-  isRetail = false,
+  onToggleStatus,
+  showStock = false,
   currentStock = 0,
   minStock = 0,
   isLoadingStock = false,
 }: ProductSummaryProps) {
-
-  const {handleUpdateProductStatusInList} = useInventoryContext(); 
+  
   return (
     <div className="grid grid-cols-2 gap-3">
       {/* Card de Preço Atual */}
@@ -47,18 +52,20 @@ export function ProductSummary({
         </div>
       </Card>
 
-      {/* Card de Status (Tornado clicável via botão pai) */}
+      {/* Card de Status (Clicável, usa a Action do Contexto repassada pelo Pai) */}
       <button
         type="button"
         disabled={isUpdatingStatus}
-        onClick={() => handleUpdateProductStatusInList()}
+        onClick={onToggleStatus}
         className="text-left outline-none block transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
       >
         <Card className="p-5 h-full flex flex-col justify-center border-border shadow-sm hover:bg-muted/40 transition-colors">
           <div className="flex items-center gap-3">
             <div
               className={`p-2.5 rounded-xl ${
-                status ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"
+                status
+                  ? "bg-emerald-50 text-emerald-600"
+                  : "bg-amber-50 text-amber-600"
               }`}
             >
               <Activity size={20} />
@@ -76,7 +83,11 @@ export function ProductSummary({
                   }`}
                 />
                 <p className="text-sm font-black text-foreground">
-                  {isUpdatingStatus ? "Atualizando..." : status ? "Ativo" : "Pausado"}
+                  {isUpdatingStatus
+                    ? "Atualizando..."
+                    : status
+                    ? "Ativo"
+                    : "Pausado"}
                 </p>
               </div>
             </div>
@@ -84,8 +95,8 @@ export function ProductSummary({
         </Card>
       </button>
 
-      {/* Cards de Estoque - Só aparecem se for Retail */}
-      {isRetail && (
+      {/* Cards de Estoque - Aparecem dinamicamente baseado na configuração do produto */}
+      {showStock && (
         <>
           {/* Estoque Atual */}
           <Card className="p-5 flex flex-col justify-center border-border shadow-sm">
@@ -123,9 +134,7 @@ export function ProductSummary({
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">
                   Estoque Mínimo
                 </p>
-                <p className="text-sm font-black text-foreground">
-                  {minStock}
-                </p>
+                <p className="text-sm font-black text-foreground">{minStock}</p>
               </div>
             </div>
           </Card>

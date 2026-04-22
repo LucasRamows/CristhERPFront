@@ -14,7 +14,8 @@ export interface ProductsResponse {
     id?: string;
     name: string;
   };
-
+  isSimpleProduct: boolean;
+  manageStock: boolean;
   unit: "UN" | "KG";
   price: number;
   status: boolean;
@@ -39,6 +40,7 @@ export interface ProductRecipe {
   id: string;
   productId: string;
   itemId: string;
+
   quantity: string; // vem como string do backend
   item: {
     id: string;
@@ -116,7 +118,7 @@ export interface ProductsStatsResponse {
 // ─────────────────────────────────────────────────────────────
 
 export interface IngredientFormItem {
-  ingredientId: string;
+  itemId: string;
   name: string;
   unit: string;
   quantity: number;        // número no formulário (diferente do backend)
@@ -130,8 +132,10 @@ export type MenuItemFormType = {
   unit: "UN" | "KG";
   description?: string;
   code?: string;
+  isSimpleProduct: boolean;
   imageUrl?: string;
   minStock?: number;
+  manageStock: boolean;
   status: boolean;
-  items: IngredientFormItem[];
+  items?: IngredientFormItem[];
 };

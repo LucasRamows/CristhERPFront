@@ -9,7 +9,7 @@ import LoadingComponent from "../../../../components/shared/LoadingComponent";
 import { SearchListPicker } from "../../../../components/shared/SearchListPicker";
 import type { ProductsResponse } from "../../../../services/products/products.types";
 import type { PdvEntity } from "../../../types/PdvEntity";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 
 interface ProductMenuProps {
   activeEntity?: PdvEntity | null;

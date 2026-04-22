@@ -4,27 +4,12 @@
 import { Download, X } from "lucide-react";
 import { useState } from "react";
 
-import type { CartItem } from "../../../_root/pdv/utils/pdv.types";
-import type { PdvEntity } from "../../../_root/types/PdvEntity";
-import LoadingComponent from "../../../components/shared/LoadingComponent";
-import { Button } from "../../../components/ui/button";
-import { Sheet, SheetContent, SheetTitle, SheetDescription } from "../../../components/ui/sheet";
-import { generateReceiptPDF } from "../../../services/receipt/receipt.service";
-import { useAuthenticatedUser } from "../../../contexts/DataContext";
-
-interface ViewCartReceiptSheetProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
-  activeEntity: PdvEntity | null;
-  cart: CartItem[];
-  subtotal: number;
-  discount: number;
-  serviceTax: number;
-  total: number;
-  timestamp?: string;
-  isSyncing?: boolean;
-}
-
+import type { ViewCartReceiptSheetProps } from "../../_root/passbook/types/context.type";
+import { useAuthenticatedUser } from "../../contexts/DataContext";
+import { generateReceiptPDF } from "../../services/receipt/receipt.service";
+import { Button } from "../ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "../ui/sheet";
+import LoadingComponent from "./LoadingComponent";
 export function ViewCartReceiptSheet({
   isOpen,
   onOpenChange,
@@ -36,12 +21,13 @@ export function ViewCartReceiptSheet({
   total,
   timestamp,
   isSyncing = false,
+  description,
 }: ViewCartReceiptSheetProps) {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const {data} = useAuthenticatedUser();
+  const { data } = useAuthenticatedUser();
   if (!activeEntity) return null;
 
-  console.log(data)
+  console.log(data);
   const handleGenerateReceipt = async () => {
     try {
       setIsGeneratingPDF(true);
@@ -101,11 +87,29 @@ export function ViewCartReceiptSheet({
             {isSyncing ? (
               <LoadingComponent />
             ) : cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-300 py-20">
+              <div className="h-full flex flex-col items-center justify-center text-gray-300 py-20 px-6 text-center space-y-4">
                 <p className="font-black text-xl text-gray-400">
                   Nenhum item na nota
                 </p>
-              </div>
+                {(description || (activeEntity as any)?.description) && (
+                  <div className="bg-gray-50/50 p-4 rounded-xl border border-gray-100 w-full mt-4">
+                    <p className="font-medium text-gray-500 italic">
+                      "{description || (activeEntity as any)?.description}"
+                    </p>
+                  </div>
+                )}
+                
+                  <div className="border-t-2 border-dashed border-gray-200 pt-6 space-y-3">
+                    <div className="flex justify-between items-center bg-[#F1FCE1] p-5 rounded-2xl border border-[#E2F898]">
+                      <span className="font-black text-gray-900">
+                        VALOR TOTAL DA DÍVIDA
+                      </span>
+                      <span className="font-black text-2xl text-[#44A08D]">
+                        R$ {total.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
             ) : (
               <div className="space-y-4">
                 {/* Cabeçalho de Itens */}

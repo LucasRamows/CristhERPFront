@@ -3,7 +3,7 @@
 
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
-import ReceiptPDF from "../../_features/receipt/recipes/ReceiptPDF";
+import ReceiptPDF from "../../components/shared/ReceiptPDF";
 import type { CartItem } from "../../_root/pdv/utils/pdv.types";
 import type { PdvEntity } from "../../_root/types/PdvEntity";
 

@@ -3,7 +3,7 @@ import { formatDate } from "date-fns";
 import { AlertCircle, Clock, Plus, Receipt } from "lucide-react";
 import { SearchListPicker } from "../../../../components/shared/SearchListPicker";
 import { Button } from "../../../../components/ui/button";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 
 export function ComandasGrid({
   setIsAddComandaOpen,

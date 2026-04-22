@@ -421,14 +421,14 @@ export function SupplierHistorySheet({
                                   </span>
                                   <div className="flex flex-col">
                                     <span className="font-black text-zinc-900 dark:text-zinc-100 uppercase text-xs">
-                                      {item.ingredient?.name ||
-                                        `Insumo #${item.ingredientId.slice(
+                                      {item.item?.name ||
+                                        `Insumo #${item.itemId.slice(
                                           -4,
                                         )}`}
                                     </span>
                                     <span className="text-[10px] text-zinc-400 font-bold uppercase">
                                       {formatMoney(item.unitPrice)} p/{" "}
-                                      {item.ingredient?.unit || "un"}
+                                      {item.item?.unit || "un"}
                                     </span>
                                   </div>
                                 </div>

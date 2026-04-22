@@ -1,4 +1,4 @@
-import { usePDV } from "./utils/types.ts";
+import { usePDV } from "./types/pdv.types.ts";
 
 import { useState } from "react";
 import { CartSheet } from "./components/cart/CartSheet.tsx";

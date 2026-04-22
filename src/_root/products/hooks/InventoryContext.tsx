@@ -13,7 +13,10 @@ import {
   type CreateItemRequest,
 } from "../../../services/inventory/inventory.service";
 import { productsService } from "../../../services/products/products.service";
-import type { ProductsResponse } from "../../../services/products/products.types";
+import type {
+  ProductsResponse,
+  MenuItemFormType,
+} from "../../../services/products/products.types";
 
 type ActiveView = "products" | "inventory" | "entry-notes";
 
@@ -41,7 +44,11 @@ interface InventoryContextValue {
   handleCreateInventorySuccess: (newItem: ItemResponse) => void;
   handleUpdateInventoryItem: (updatedItem: ItemResponse) => void;
   handleUpdateProductStatusInList: () => void;
-  handleSaveInventoryItem: (payload: CreateItemRequest, id?: string) => Promise<ItemResponse>;
+  handleSaveInventoryItem: (
+    payload: CreateItemRequest,
+    id?: string,
+  ) => Promise<ItemResponse>;
+  handleSaveProduct: (payload: any, id?: string) => Promise<ProductsResponse>;
   fetchInventory: () => Promise<void>;
 }
 
@@ -110,6 +117,9 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       newItem.categoryId,
       newItem.category?.name || "",
     );
+    if (newItem.productRecipes && newItem.productRecipes.length > 0) {
+      handleEditItemSuccess(newItem.productRecipes[0].item);
+    }
     setIsCreateProductOpen(false);
   };
 
@@ -119,6 +129,53 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     );
     setIsEditProductOpen(false);
     setSelectedProduct(null);
+  };
+
+  const handleEditItemSuccess = (updatedItem: any) => {
+    setInventoryItems((prev) =>
+      prev.map((p) => (p.id === updatedItem.id ? updatedItem : p)),
+    );
+    setIsEditProductOpen(false);
+    setSelectedInventoryItem(null);
+  };
+
+  const handleSaveProduct = async (
+    values: Partial<MenuItemFormType>,
+    id?: string,
+  ) => {
+    try {
+      console.log("aqui2");
+      setIsLoadingProducts(true);
+      let result: ProductsResponse;
+
+      const payload = {
+        ...values,
+        isSimpleProduct: isRetail,
+      };
+
+      if (id) {
+        // MODO EDIÇÃO
+        result = await productsService.updateProduct(id, values);
+        toast.success("Produto atualizado com sucesso!");
+        handleEditProductSuccess(result);
+        if (result.productRecipes && result.productRecipes.length > 0) {
+          handleEditItemSuccess(result.productRecipes[0].item);
+        }
+      } else {
+        // MODO CRIAÇÃO
+        result = await productsService.createProduct(payload as any);
+        toast.success("Produto criado com sucesso!");
+        handleCreateProductSuccess(result);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Erro ao salvar produto:", error);
+      toast.error("Erro ao salvar produto.");
+      throw error;
+    } finally {
+      setIsLoadingProducts(false);
+    }
   };
 
   const syncInventoryItemToProducts = (inventoryItem: ItemResponse) => {
@@ -203,7 +260,6 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     if (!selectedProduct) return;
 
     const productToDelete = selectedProduct;
-    // --- OPTIMISTIC UPDATE ---
     setProducts((prev) => prev.filter((p) => p.id !== productToDelete.id));
 
     try {
@@ -212,9 +268,8 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     } catch (error) {
       console.error("Erro ao excluir produto:", error);
       toast.error("Erro ao excluir produto. Restaurando...");
-      // --- ROLLBACK ---
       setProducts((prev) => [productToDelete, ...prev]);
-      throw error; // Let the caller know it failed
+      throw error;
     }
   };
 
@@ -228,7 +283,10 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     upsertInventoryItem(updatedItem);
   };
 
-  const handleSaveInventoryItem = async (payload: CreateItemRequest, id?: string) => {
+  const handleSaveInventoryItem = async (
+    payload: CreateItemRequest,
+    id?: string,
+  ) => {
     try {
       let result: ItemResponse;
 
@@ -239,7 +297,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       } else {
         // MODO CRIAÇÃO (Híbrido - Item + Opcionalmente Produto)
         result = await inventoryService.createItem(payload);
-        
+
         toast.success(
           payload.createProduct
             ? "Insumo e Produto criados com sucesso!"
@@ -273,12 +331,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       selectedProduct.id,
     );
     setProducts((prev) =>
-      prev.map(
-        (p) =>
-          p.id === selectedProduct.id
-            ? product 
-            : p,
-      ),
+      prev.map((p) => (p.id === selectedProduct.id ? product : p)),
     );
 
     setSelectedProduct((current) =>
@@ -311,6 +364,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     handleUpdateInventoryItem,
     handleUpdateProductStatusInList,
     handleSaveInventoryItem,
+    handleSaveProduct,
     fetchInventory,
   };
 

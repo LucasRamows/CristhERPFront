@@ -8,7 +8,7 @@ interface ProductCardProps {
   isRetail: boolean;
 }
 
-export const ProductCard = ({
+export const  ProductCard = ({
   item,
   onClick,
   formatMoney,

@@ -18,10 +18,10 @@ interface CategoryProductSelectorProps {
   products: ProductsResponse[];
   onProductSelect?: (product: ProductsResponse) => void;
 }
-
+ 
 const ALL_ID = "TODOS";
 
-export const CategoryProductSelector: React.FC<
+export const  CategoryProductSelector: React.FC<
   CategoryProductSelectorProps
 > = ({ categories, products, onProductSelect }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>(ALL_ID);

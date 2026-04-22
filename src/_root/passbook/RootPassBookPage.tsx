@@ -1,39 +1,33 @@
 import { Plus } from "lucide-react";
-import { PassbookClientDetailsPanel } from "./components/PassbookClientDetailsPanel";
-import { PassbookClientListPanel } from "./components/PassbookClientListPanel";
-import RootCreateCustomerSheet from "./components/sheets/RootCreateCustomerSheet";
 import LoadingComponent from "../../components/shared/LoadingComponent";
 import { SearchListPicker } from "../../components/shared/SearchListPicker";
 import { Button } from "../../components/ui/button";
-import { usePassbookPage } from "./hooks/usePassbookPage";
 import { PaymentModal } from "../pdv/components/modals/PaymentModal";
+import { ClientDetailsModal } from "./components/ClientDetailsModal";
+import { ClientsListModal } from "./components/ClientsListModal";
+import CustomerSheet from "./components/sheets/CustomerSheet";
+import { PassbookProvider, usePassbook } from "./hooks/PassbookContext";
 
-export default function RootPassBookPage() {
+
+function PassBook() {
   const {
     clients,
     activeClient,
-    activeClientId,
     setActiveClientId,
-    isCreateCustomerModalOpen,
-    isPaymentModalOpen,
-    isLoading,
-    editingClient,
-    ledgerEntries,
-    handlePayDebit,
-    handleDeleteTransaction,
-    toggleBloqueio,
-    handleClientSuccess,
-    handleCreateCustomerOpenChange,
-    handleEditProfile,
-    setIsPaymentModalOpen,
-    setIsCreateCustomerModalOpen,
-    setClients,
-  } = usePassbookPage();
-  if (isLoading) {
+    isLoadingData, // Vem do usePassbookData
+    isPaymentModalOpen, // Vem do usePassbookUI
+    closePaymentModal, // Vem do usePassbookUI
+    receivePaymentAction, // Vem do usePassbookActions (Confirme o nome da sua ação de pagar)
+  } = usePassbook();
+
+  // Verifica o Loading do Data Context
+  if (isLoadingData) {
     return <LoadingComponent />;
   }
+
   return (
     <div className="flex gap-4 flex-col w-full bg-background overflow-hidden select-none">
+      {/* BARRA SUPERIOR: BUSCA E ADICIONAR */}
       <div className="flex gap-2">
         <div className="flex-1 w-full">
           <SearchListPicker
@@ -46,51 +40,49 @@ export default function RootPassBookPage() {
             renderSubtitle={(client) => client.fullName}
           />
         </div>
-        <Button onClick={() => setIsCreateCustomerModalOpen(true)}>
-          <Plus size={20} />
-          <span className="hidden sm:inline">Adicionar</span>
-        </Button>
-      </div>
-      <div className="flex h-full w-full overflow-hidden card-default">
-        <PassbookClientListPanel
-          clients={clients}
-          activeClientId={activeClientId}
-          setActiveClientId={setActiveClientId}
-        />
 
-        {/* LADO DIREITO: DETALHES DO CLIENTE */}
-        <PassbookClientDetailsPanel
-          activeClient={activeClient}
-          handleDeleteTransaction={handleDeleteTransaction}
-          setActiveClientId={setActiveClientId}
-          transactions={ledgerEntries}
-          toggleBloqueio={toggleBloqueio}
-          setIsPaymentModalOpen={setIsPaymentModalOpen}
-          onEditProfile={() => handleEditProfile(activeClient)}
-        />
+        {/* SMART COMPONENT: Envelopa o botão nativamente */}
+        <CustomerSheet mode="create">
+          <Button>
+            <Plus size={20} />
+            <span className="hidden sm:inline">Adicionar</span>
+          </Button>
+        </CustomerSheet>
       </div>
+
+      <div className="flex h-full w-full overflow-hidden card-default">
+        {/* LADO ESQUERDO: LISTA DE CLIENTES (Sem props) */}
+        <ClientsListModal />
+
+        {/* LADO DIREITO: DETALHES DO CLIENTE (Sem props) */}
+        <ClientDetailsModal />
+      </div>
+
       {/* MODAL: RECEBER PAGAMENTO */}
       {isPaymentModalOpen && activeClient && (
         <PaymentModal
           isOpen={isPaymentModalOpen}
-          onClose={() => setIsPaymentModalOpen(false)}
+          onClose={closePaymentModal}
           subtotal={0}
           serviceTax={0}
           total={activeClient.saldoDevedor}
           mode="payment_only"
           hideFiado
           title={`Receber de ${activeClient.nickname}`}
-          onConfirm={handlePayDebit}
+          onConfirm={async (data) => {
+            await receivePaymentAction(data);
+            closePaymentModal();
+          }}
         />
       )}
-      {/* SHEET: CADASTRAR CLIENTE */}
-      <RootCreateCustomerSheet
-        open={isCreateCustomerModalOpen}
-        setClients={setClients}
-        onOpenChange={handleCreateCustomerOpenChange}
-        initialData={editingClient}
-        onSuccess={handleClientSuccess}
-      />
     </div>
+  );
+}
+
+export default function RootPassBookPage() {
+  return (
+    <PassbookProvider>
+      <PassBook />
+    </PassbookProvider>
   );
 }

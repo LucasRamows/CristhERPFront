@@ -7,8 +7,8 @@ import { useAuthenticatedUser } from "../../../../contexts/DataContext";
 import { pdvTabs } from "../../../../lib/sidebarNavFilter";
 import { HistorySheet } from "../sheets/HistorySheet";
 
-import type { PDVView } from "../../utils/types";
-import { usePDV } from "../../utils/types";
+import type { PDVView } from "../../types/pdv.types";
+import { usePDV } from "../../types/pdv.types";
 
 export function PDVHeader() {
   const { activeView, setActiveView, handleCaixaRapido, activeEntity } =

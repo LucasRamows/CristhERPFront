@@ -1,64 +1,14 @@
 import api from "../api";
-
-export interface CostomersResponse {
-  id: string;
-  fullName: string;
-  nickname: string;
-  phone: string;
-  cpf: string;
-  creditLimit: number;
-  settlementDate: number;
-  isBlocked: boolean;
-  saldoDevedor: number;
-}
-
-export interface CreateCustomerDto {
-  fullName: string;
-  nickname: string;
-  phone: string;
-  cpf: string;
-  creditLimit: number;
-  settlementDate: number;
-}
-
-export interface CreateLedgerEntryDto {
-  type: string;
-  amount: number;
-  description: string;
-}
-
-export interface LedgerEntry {
-  id: string;
-  restaurantId: string;
-  customerId: string;
-  operatorId: string;
-  type: string;
-  amount: string;
-  balanceAfter: string;
-  description: string;
-  createdAt: string;
-  orderId: string;
-  order: {
-    id: string;
-    restaurantId: string;
-    orderType: string;
-    reference: string;
-    status: string;
-    sale_date: string;
-    subtotal: string;
-    serviceTax: string;
-    discount: string;
-    total: string;
-    customerId: string;
-    operatorId: string;
-    openedAt: string;
-    closedAt: string;
-  };
-}
+import {
+  type CreateCustomerDto,
+  type CreateLedgerEntryDto,
+  type LedgerEntry,
+  type CostomersResponse,
+} from "./customer.type";
 
 export const costomersService = {
-  async createCustomer(createCustomerDto: CreateCustomerDto): Promise<[]> {
-    const { data } = await api.post<[]>("/customers", createCustomerDto);
+  async createCustomer(createCustomerDto: CreateCustomerDto): Promise<CostomersResponse> {
+    const { data } = await api.post<CostomersResponse>("/customers", createCustomerDto);
     return data;
   },
 
@@ -77,6 +27,17 @@ export const costomersService = {
           "Operator-Id": operatorId,
         },
       },
+    );
+    return data;
+  },
+
+  async addDebt(
+    customerId: string,
+    createLedgerEntryDto: CreateLedgerEntryDto,
+  ): Promise<LedgerEntry> {
+    const { data } = await api.post<LedgerEntry>(
+      `/customers/${customerId}/debt`,
+      createLedgerEntryDto,
     );
     return data;
   },

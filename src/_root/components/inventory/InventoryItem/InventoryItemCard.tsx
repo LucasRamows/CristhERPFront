@@ -22,6 +22,7 @@ export function InventoryItemCard({
     ? Math.min((currentStock / minStock) * 100, 100)
     : 100;
 
+  const isProduct = item.productRecipes?.length || 0 > 0;
   // Definição semântica de cores com base no status
   let statusColor = "bg-emerald-500";
   let statusText = "text-emerald-500";
@@ -110,15 +111,17 @@ export function InventoryItemCard({
           </span>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(item);
-              }}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-background border border-border text-muted-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all shrink-0"
-            >
-              <Pencil size={14} strokeWidth={2.5} />
-            </button>
+            {!isProduct && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(item);
+                }}
+                className="w-8 h-8 rounded-full flex items-center justify-center bg-background border border-border text-muted-foreground hover:bg-primary hover:border-primary hover:text-primary-foreground transition-all shrink-0"
+              >
+                <Pencil size={14} strokeWidth={2.5} />
+              </button>
+            )}
             <div
               onClick={() => onClick(item)}
               className="w-8 h-8 rounded-full flex items-center justify-center bg-background border border-border text-muted-foreground group-hover:bg-primary group-hover:border-primary group-hover:text-primary-foreground transition-all shrink-0"

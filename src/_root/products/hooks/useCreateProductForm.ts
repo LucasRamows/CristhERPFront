@@ -1,15 +1,13 @@
 // create-product-sheet/hooks/useCreateProductForm.ts
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 
-import { productsService } from "../../../services/products/products.service";
 import { menuItemSchema, type MenuItemFormType } from "../schemas/menuItemSchema";
-import { useProductFormHelpers } from "./useProductFormHelpers";
 import { useInventoryContext } from "./InventoryContext";
+import { useProductFormHelpers } from "./useProductFormHelpers";
 
 export function useCreateProductForm() {
-  const { isRetail, handleCreateProductSuccess } = useInventoryContext();
+  const { isRetail, handleSaveProduct } = useInventoryContext();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<MenuItemFormType>({
@@ -44,21 +42,10 @@ export function useCreateProductForm() {
     // }
 
     try {
-      console.log("Payload para criação:", result.data);
       setIsLoading(true);
-
-      const payload = {
-        ...result.data,
-        isSimpleProduct: isRetail,
-      };
-
-      const newItem = await productsService.createProduct(payload as any);
-
-      toast.success("Produto criado com sucesso!");
-      handleCreateProductSuccess(newItem);
+      await handleSaveProduct(values);
     } catch (err) {
-      toast.error("Erro ao criar o produto.");
-      console.error(err);
+      // Error is handled in context
     } finally {
       setIsLoading(false);
     }

@@ -11,7 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../../../components/ui/tooltip";
-import { usePDV } from "../../utils/types";
+import { usePDV } from "../../types/pdv.types";
 import { PdvRenderDatePicker } from "./DatesModel";
 
 export function ProductModal() {
@@ -20,9 +20,8 @@ export function ProductModal() {
     confirmAddToCart,
     activeEntity,
     setSelectedProduct,
-    isSyncing
+    isSyncing,
   } = usePDV();
-
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [saleDate, setSaleDate] = useState<Date | undefined>();

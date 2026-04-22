@@ -8,20 +8,22 @@ import {
 } from "lucide-react";
 import { Controller } from "react-hook-form";
 
-import { UniversalImageUploader } from "../../../../_features/storage/UniversalmageUploader";
-import SuccessScreen from "../../../../components/shared/SuccessPopUp";
+import { UniversalImageUploader } from "../../../../components/shared/UniversalmageUploader";
 import { BrInput } from "../../../../components/ui/BrInput";
-import { useAuthenticatedUser } from "../../../../contexts/DataContext";
-import type { ProductEditViewProps } from "../../types/product.types";
-import { useProductForm } from "../../hooks/useEditForm";
-import { CompositionSection } from "../shared/CompositionSection";
+import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
+import { useAuthenticatedUser } from "../../../../contexts/DataContext";
+import { useInventoryContext } from "../../hooks/new/InventoryContext";
+import { useProductForm } from "../../hooks/new/useEditForm";
+import { CompositionSection } from "../shared/CompositionSection";
 
-export default function ProductEditView({
-  isRetail,
-  onBack,
-}: ProductEditViewProps) {
+interface ProductEditViewProps {
+  onBack?: () => void;
+}
+
+export default function ProductEditView({ onBack }: ProductEditViewProps) {
   const { categories } = useAuthenticatedUser();
+  const { isRetail } = useInventoryContext();
 
   const {
     form,
@@ -29,24 +31,22 @@ export default function ProductEditView({
     imageUrl,
     itemsRepo,
     isLoading,
-    sendSuccess,
     handleSubmit,
     addIngredient,
     removeIngredient,
     updateQuantity,
   } = useProductForm();
 
-  // Mostrar tela de sucesso
-  if (sendSuccess) {
-    return (
-      <div className="flex-1 flex items-center justify-center p-8">
-        <SuccessScreen message="Atualizado com sucesso!" />
-      </div>
-    );
-  }
+  // Monitoramos os dois toggles
+  const isSimpleProduct = form.watch("isSimpleProduct") ?? false;
+  const manageStock = form.watch("manageStock") ?? true; // No varejo, o padrão é controlar o estoque
+
+  // Regra de exibição do Estoque Mínimo
+  const showMinStock =
+    (isRetail && manageStock) || (!isRetail && isSimpleProduct);
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white relative">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-gray-100 flex items-center gap-4 bg-gray-50 shrink-0">
         {onBack && (
@@ -91,10 +91,10 @@ export default function ProductEditView({
               />
             </div>
 
-            {/* Preço e Quantidade (Quantidade apenas para Retail) */}
+            {/* Preço e Estoque Mínimo Dinâmico */}
             <div
               className={`grid gap-3 ${
-                isRetail ? "grid-cols-2" : "grid-cols-1"
+                showMinStock ? "grid-cols-2" : "grid-cols-1"
               }`}
             >
               <div className="space-y-1.5">
@@ -110,13 +110,16 @@ export default function ProductEditView({
                       decimals={2}
                       value={field.value}
                       onChange={field.onChange}
+                      className="flex items-center w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl focus-within:border-gray-400 transition-all"
+                      inputClassName="flex-1 bg-transparent border-none font-bold text-sm text-gray-900 outline-none w-full"
                     />
                   )}
                 />
               </div>
 
-              {isRetail && (
-                <div className="space-y-1.5">
+              {/* O Estoque Mínimo aparece nas duas situações onde faz sentido */}
+              {showMinStock && (
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1">
                   <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">
                     Estoque Mínimo
                   </label>
@@ -125,11 +128,15 @@ export default function ProductEditView({
                     control={form.control}
                     render={({ field }) => (
                       <Input
+                        className="w-full h-11 px-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-gray-400 outline-none transition-all font-bold text-sm"
                         type="number"
                         value={field.value ?? ""}
                         onChange={(event) => {
-                          const value = (event.target as HTMLInputElement).value;
-                          field.onChange(value === "" ? undefined : Number(value));
+                          const value = (event.target as HTMLInputElement)
+                            .value;
+                          field.onChange(
+                            value === "" ? undefined : Number(value),
+                          );
                         }}
                       />
                     )}
@@ -214,16 +221,19 @@ export default function ProductEditView({
         </div>
 
         {/* Composição / Insumos */}
-        {!isRetail && (
-          <CompositionSection
-            ingredients={itemsField}
-            itemsRepo={itemsRepo}
-            onAddIngredient={addIngredient}
-            onUpdateQuantity={updateQuantity}
-            onRemoveIngredient={removeIngredient}
-            title="Composição / Insumos"
-            placeholder="Adicionar insumo..."
-          />
+        {/* Só aparece se for Restaurante E for Produto Composto */}
+        {!isRetail && !isSimpleProduct && (
+          <div className="animate-in fade-in slide-in-from-bottom-2">
+            <CompositionSection
+              items={itemsField}
+              itemsRepo={itemsRepo}
+              onAddItem={addIngredient}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeIngredient}
+              title="Receita / Insumos"
+              placeholder="Adicionar insumo à receita..."
+            />
+          </div>
         )}
 
         {/* Descrição */}
@@ -241,12 +251,11 @@ export default function ProductEditView({
       </div>
 
       {/* Footer Fixo */}
-      <div className="p-4 md:p-6 border-t border-gray-100 bg-white absolute bottom-0 left-0 right-0 flex gap-3 shrink-0">
-        <button
-          type="button"
+      <div className="p-4 md:p-6 border-t border-gray-100 bg-white absolute bottom-0 left-0 right-0 flex gap-3 shrink-0 z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        <Button
           disabled={isLoading}
           onClick={form.handleSubmit(handleSubmit)}
-          className="flex-1 h-12 bg-gray-900 text-white rounded-xl font-black text-xs tracking-widest uppercase hover:bg-gray-800 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full"
         >
           {isLoading ? (
             <>
@@ -256,7 +265,7 @@ export default function ProductEditView({
           ) : (
             "Salvar Alterações"
           )}
-        </button>
+        </Button>
       </div>
     </div>
   );

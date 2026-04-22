@@ -18,15 +18,15 @@ export type {
   PDVContextType,
   PDVBusinessContextType,
   PDVUIContextType,
-} from "./pdv.types";
+} from "../utils/pdv.types";
 
 // Contexts
-export { PDVUIContext } from "./PDVUIContext";
-export { PDVBusinessContext } from "./PDVProvider";
+export { PDVUIContext } from "../utils/PDVUIContext";
+export { PDVBusinessContext } from "../utils/PDVProvider";
 
 // Hooks — primary split hooks
-export { usePDVBusiness, usePDV } from "./PDVProvider";
-export { usePDVUI } from "./PDVUIContext";
+export { usePDVBusiness, usePDV } from "../utils/PDVProvider";
+export { usePDVUI } from "../utils/PDVUIContext";
 
 // Legacy specialised hooks (kept for any consumers that use them)
-export { usePDVCart, usePDVPayment, usePDVEntity } from "./pdv.hooks";
+export { usePDVCart, usePDVPayment, usePDVEntity } from "../utils/pdv.hooks";

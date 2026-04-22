@@ -12,28 +12,28 @@ import { SearchListPicker } from "../../components/shared/SearchListPicker";
 import { useAuthenticatedUser } from "../../contexts/DataContext";
 import { InventoryTable } from "../components/inventory/InventoryTable";
 import EntryPage from "./components/EntryPage";
+
+// Sheets Refatoradas
 import { CreateItemSheet } from "./components/sheets/CreateItemSheet";
 import { CreateProductSheet } from "./components/sheets/CreateProductSheet";
 import { EditProductSheet } from "./components/sheets/EditProductSheet";
+
+// Provedor e Hooks da Nova Arquitetura
 import {
   InventoryProvider,
   useInventoryContext,
-} from "./hooks/InventoryContext";
+} from "./hooks/new/InventoryContext";
 
 function MenuContent() {
+  // Puxando apenas o que importa do nosso contexto segmentado
   const {
     activeView,
     setActiveView,
     isRetail,
     products,
-    inventoryItems,
     isLoadingProducts,
     isLoadingInventory,
-    setIsCreateProductOpen,
-    setIsEditProductOpen,
-    setIsCreateInventoryOpen,
-    setSelectedProduct,
-    handleUpdateInventoryItem,
+    setActiveProduct,
   } = useInventoryContext();
 
   const filteredTabs = productsTabs.filter(
@@ -46,7 +46,7 @@ function MenuContent() {
 
   const isLoading =
     isLoadingProducts || (activeView === "inventory" && isLoadingInventory);
-
+    
   if (isLoading) {
     return <LoadingComponent />;
   }
@@ -62,37 +62,40 @@ function MenuContent() {
         />
 
         {activeView === "inventory" && (
-          <Button onClick={() => setIsCreateInventoryOpen(true)}>
-            <Plus size={18} strokeWidth={3} />
-            Novo Item
-          </Button>
+          // O Botão agora é envelopado pelo Smart Component
+          <CreateItemSheet>
+            <Button>
+              <Plus size={18} strokeWidth={3} />
+              Novo Item
+            </Button>
+          </CreateItemSheet>
         )}
 
         {activeView === "products" && (
-          <Button onClick={() => setIsCreateProductOpen(true)}>
-            <Plus size={20} />
-            <span>Adicionar</span>
-          </Button>
+          // O Botão agora é envelopado pelo Smart Component
+          <CreateProductSheet>
+            <Button>
+              <Plus size={20} /> Adicionar
+            </Button>
+          </CreateProductSheet>
         )}
 
         {activeView === "entry-notes" && (
-          <Button onClick={() => setIsCreateProductOpen(true)}>
+          <Button onClick={() => console.log("Em breve: Modal de Histórico")}>
             <Clock size={20} />
-            <span>Historico</span>
+            <span>Histórico</span>
           </Button>
         )}
       </div>
 
-      {/* Conteúdo */}
+      {/* Conteúdo Central */}
       <div className="flex-1 overflow-y-auto p-6 pb-6 bg-card rounded-xl custom-scrollbar">
         {activeView === "products" && (
           <div className="flex flex-col gap-4">
             <SearchListPicker
               items={products}
-              onSelect={(item) => {
-                setSelectedProduct(item);
-                setIsEditProductOpen(true);
-              }}
+              // A MÁGICA: Apenas setamos o produto ativo, e a gaveta reage sozinha!
+              onSelect={(item) => setActiveProduct(item)}
               placeholder="Buscar produto por nome, código ou categoria..."
               searchKeys={["name", "code", "category"]}
               avatarText={(item) => item.name.charAt(0).toUpperCase()}
@@ -108,34 +111,27 @@ function MenuContent() {
             <CategoryProductSelector
               categories={categories}
               products={products}
-              onProductSelect={(item) => {
-                setSelectedProduct(item);
-                setIsEditProductOpen(true);
-              }}
+              // A MÁGICA DE NOVO!
+              onProductSelect={(item) => setActiveProduct(item)}
             />
           </div>
         )}
 
         {activeView === "inventory" && (
           <InventoryTable
-            items={inventoryItems}
-            onItemUpdated={handleUpdateInventoryItem}
+          
           />
         )}
 
         {activeView === "entry-notes" && <EntryPage />}
       </div>
 
-      {/* ==================== SHEETS ==================== */}
-
-      {/* Criar Produto */}
-      <CreateProductSheet />
-
-      {/* Editar Produto */}
+      {/* ==================== SHEETS (Ouvintes de Estado) ==================== */}
+      
+      {/* Esta gaveta não tem botão (trigger) físico, ela "ouve" a variável activeProduct. */}
+      {/* Se houver um activeProduct, ela abre e preenche os dados. */}
       <EditProductSheet />
 
-      {/* Criar Item de Inventário */}
-      <CreateItemSheet />
     </div>
   );
 }

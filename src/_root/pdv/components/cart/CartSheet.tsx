@@ -8,8 +8,8 @@ import {
   SheetContent,
   SheetTitle,
 } from "../../../../components/ui/sheet";
-import type { CartItem } from "../../utils/types";
-import { usePDV } from "../../utils/types";
+import type { CartItem } from "../../types/pdv.types";
+import { usePDV } from "../../types/pdv.types";
 import { PaymentModal } from "../modals/PaymentModal";
 import { SplitModal } from "../modals/SplitModal";
 

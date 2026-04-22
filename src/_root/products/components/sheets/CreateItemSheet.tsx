@@ -1,11 +1,12 @@
 import { Droplet, Package, RefreshCw, Weight, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { BrInput } from "../../../../components/ui/BrInput";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetTrigger, // <-- Importado o Trigger
 } from "../../../../components/ui/sheet";
 import { Switch } from "../../../../components/ui/switch";
 import {
@@ -15,43 +16,37 @@ import {
 } from "../../../../components/ui/tooltip";
 import { useAuthenticatedUser } from "../../../../contexts/DataContext";
 import { getReference } from "../../../../lib/utils";
-import {
-  type ItemResponse
-} from "../../../../services/inventory/inventory.service";
-import { useInventoryContext } from "../../hooks/InventoryContext";
+import { useInventoryContext } from "../../hooks/new/InventoryContext";
 
+// Agora recebe children para envelopar o botão
 interface CreateItemSheetProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-  onSuccess?: (item: ItemResponse) => void;
-  activeItem?: ItemResponse | null;
+  children?: ReactNode;
 }
 
-export function CreateItemSheet({
-  isOpen: isOpenProp,
-  onClose: onCloseProp,
-  onSuccess: onSuccessProp,
-  activeItem: activeItemProp,
-}: CreateItemSheetProps) {
-  const context = useInventoryContext();
+export function CreateItemSheet({ children }: CreateItemSheetProps) {
+  // Puxamos a nova estrutura do Contexto
+  const {
+    activeInventoryItem,
+    setActiveInventoryItem,
+    saveInventoryItemAction,
+  } = useInventoryContext();
 
-  const isOpen = isOpenProp ?? context?.isCreateInventoryOpen ?? false;
-  const onClose =
-    onCloseProp ?? (() => context?.setIsCreateInventoryOpen?.(false));
-  const onSuccess = onSuccessProp ?? context?.handleCreateInventorySuccess;
-  const activeItem = activeItemProp ?? context?.selectedInventoryItem ?? null;
+  // Estado local para quando for usado como botão "Novo Item"
+  const [isLocalOpen, setIsLocalOpen] = useState(false);
 
-  if (!onClose) {
-    throw new Error(
-      "CreateItemSheet requires onClose prop or InventoryProvider context",
-    );
-  }
+  // A gaveta abre se o usuário clicou no botão (isLocalOpen) OU se selecionou um item na tabela (activeInventoryItem)
+  const isOpen = isLocalOpen || !!activeInventoryItem;
 
-  if (!onSuccess) {
-    throw new Error(
-      "CreateItemSheet requires onSuccess prop or InventoryProvider context",
-    );
-  }
+  // Função centralizada para fechar e limpar tudo
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      setIsLocalOpen(true);
+    } else {
+      setIsLocalOpen(false);
+      setActiveInventoryItem(null);
+    }
+  };
+
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [unit, setUnit] = useState("UN");
@@ -65,19 +60,26 @@ export function CreateItemSheet({
 
   const { categories } = useAuthenticatedUser();
 
+  const isEdit = !!activeInventoryItem?.id;
+
+  // Reseta ou preenche o formulário quando a gaveta abre/fecha ou o item muda
   useEffect(() => {
-    if (activeItem) {
-      setName(activeItem.name);
-      setCode(activeItem.code || "");
-      setUnit(activeItem.unit);
-      setMinStock(activeItem.minStock);
+    if (activeInventoryItem) {
+      setName(activeInventoryItem.name);
+      setCode(activeInventoryItem.code || "");
+      setUnit(activeInventoryItem.unit);
+      setMinStock(activeInventoryItem.minStock);
+      setCreateAsProduct(false); // Na edição, não tem como "criar" como produto
     } else {
       setName("");
       setCode("");
       setUnit("UN");
       setMinStock(0);
+      setCreateAsProduct(false);
+      setPrice(0);
+      setCategoryId("");
     }
-  }, [activeItem, isOpen]);
+  }, [activeInventoryItem, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +88,8 @@ export function CreateItemSheet({
     try {
       setIsLoading(true);
 
-      await context.handleSaveInventoryItem(
+      // Chamamos a nova Action do contexto
+      await saveInventoryItemAction(
         {
           name,
           code: code || null,
@@ -99,8 +102,11 @@ export function CreateItemSheet({
             ? `Produto criado automaticamente a partir do insumo ${name}`
             : undefined,
         },
-        activeItem?.id
+        activeInventoryItem?.id
       );
+
+      // Fecha a gaveta em caso de sucesso
+      handleOpenChange(false);
     } catch (err) {
       // O erro já é tratado no context (toast)
     } finally {
@@ -108,13 +114,14 @@ export function CreateItemSheet({
     }
   };
 
-  const isEdit = !!activeItem?.id;
-
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+    <Sheet open={isOpen} onOpenChange={handleOpenChange}>
+      {/* Se o componente receber um botão (children), usamos como Trigger */}
+      {children && <SheetTrigger asChild>{children}</SheetTrigger>}
+
       <SheetContent
         side="right"
-        className="w-[90%] sm:max-w-112.5 p-0 flex flex-col h-full bg-background border-l border-border outline-none [&>button]:hidden text-left"
+        className="w-[90%] sm:max-w-112.5 p-0 flex flex-col h-full bg-background border-l border-border outline-none [&>button]:hidden text-left z-[110]"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>{isEdit ? "Editar Insumo" : "Novo Insumo"}</SheetTitle>
@@ -131,7 +138,8 @@ export function CreateItemSheet({
             </h2>
           </div>
           <button
-            onClick={onClose}
+            type="button"
+            onClick={() => handleOpenChange(false)}
             className="w-10 h-10 bg-background rounded-full flex items-center justify-center shadow-sm border border-border hover:bg-muted text-muted-foreground transition-colors"
           >
             <X size={20} />
@@ -205,7 +213,6 @@ export function CreateItemSheet({
                         </option>
                       ))}
                     </select>
-                    {/* Ícone de chevron para o select customizado */}
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
                       <svg
                         width="12"

@@ -13,7 +13,7 @@ export const menuItemSchema = z.object({
   items: z
     .array(
       z.object({
-        ingredientId: z.string(),
+        itemId: z.string(),
         quantity: z.number().min(0, "Quantidade deve ser maior ou igual a 0"),
         name: z.string().optional(),
         unit: z.string().optional(),

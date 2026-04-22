@@ -1,10 +1,11 @@
 import { X } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { Controller } from "react-hook-form";
-import SuccessScreen from "../../../../components/shared/SuccessPopUp";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
+  SheetTrigger,
 } from "../../../../components/ui/sheet";
 import {
   formatDocument,
@@ -12,36 +13,49 @@ import {
   formatPhone,
   removeMask,
 } from "../../../../lib/utils";
-import type { CostomersResponse } from "../../../../services/costomers/customers.service";
+import type { CostomersResponse } from "../../../../services/costomers/customer.type";
 import { useCustomerForm } from "../../hooks/useCustomerForm";
+import { usePassbook } from "../../hooks/PassbookContext";
 
-interface RootCreateCustomerSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  setClients: React.Dispatch<React.SetStateAction<CostomersResponse[]>>;
-  onSuccess: (newClient: CostomersResponse) => void;
+// 1. Importe o contexto global
+
+interface CustomerSheetProps {
+  mode: "create" | "edit";
   initialData?: CostomersResponse | null;
+  children: ReactNode; // O botão que vai disparar a abertura
 }
 
-export default function RootCreateCustomerSheet({
-  open,
-  onOpenChange,
-  setClients,
-  onSuccess,
+export default function CustomerSheet({
+  mode,
   initialData,
-}: RootCreateCustomerSheetProps) {
-  const isEdit = !!initialData;
+  children,
+}: CustomerSheetProps) {
+  // Estado local para abrir/fechar
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Puxa o setClients do contexto global para atualizar a lista
+  const { setClients } = usePassbook();
 
-  const { form, isSuccess, isLoading, error, handleSubmit } = useCustomerForm({
-    open,
+  const isEdit = mode === "edit";
+
+  // Reaproveitando o seu hook de formulário
+  const { form, isLoading, error, handleSubmit } = useCustomerForm({
+    open: isOpen,
     initialData,
-    setClients,
-    onSuccess,
-    onOpenChange,
+    setClients, 
+    onSuccess: () => {
+       // Apenas uma função vazia caso ele exija, ou você pode colocar um toast extra aqui
+    },
+    onOpenChange: setIsOpen,
   });
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      {/* O GATILHO ESTÁ AQUI: Ele vai "engolir" o botão que você passar como child */}
+      <SheetTrigger asChild>
+        {children}
+      </SheetTrigger>
+
       <SheetContent
         side="right"
         className="w-[90%] sm:max-w-112.5 p-0 flex flex-col h-full bg-white border-l border-gray-200 [&>button]:hidden outline-none"
@@ -61,7 +75,7 @@ export default function RootCreateCustomerSheet({
             </h2>
           </div>
           <button
-            onClick={() => onOpenChange(false)}
+            onClick={() => setIsOpen(false)}
             className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm border border-gray-200 hover:bg-gray-100 text-gray-500 transition-colors"
           >
             <X size={20} />
@@ -77,13 +91,7 @@ export default function RootCreateCustomerSheet({
           </div>
         )}
 
-        {isSuccess ? (
-          <div className="flex-1 flex items-center justify-center">
-            <SuccessScreen
-              message={isEdit ? "Perfil atualizado!" : "Cliente cadastrado!"}
-            />
-          </div>
-        ) : (
+      
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar"
@@ -240,7 +248,7 @@ export default function RootCreateCustomerSheet({
                       className="w-full h-14 px-5 bg-zinc-50 border border-zinc-200/50 rounded-[20px] focus:bg-white focus:border-[#44A08D] focus:ring-1 focus:ring-[#44A08D] outline-none transition-all font-semibold text-zinc-900 placeholder:text-zinc-400 placeholder:font-medium"
                     />
                     {form.formState.errors.settlementDate && (
-                      <p className="text-[10px) font-bold text-red-500 uppercase mt-1">
+                      <p className="text-[10px] font-bold text-red-500 uppercase mt-1">
                         {form.formState.errors.settlementDate.message}
                       </p>
                     )}
@@ -270,7 +278,6 @@ export default function RootCreateCustomerSheet({
               </button>
             </div>
           </form>
-        )}
       </SheetContent>
     </Sheet>
   );

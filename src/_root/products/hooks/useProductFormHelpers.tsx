@@ -3,7 +3,7 @@ import { inventoryService, type ItemResponse } from "../../../services/inventory
 import type { Path, UseFormReturn } from "react-hook-form";
 
 export interface ProductIngredientFormItem {
-  ingredientId: string;
+  itemId: string;
   quantity: number;
   name?: string;
   unit?: string;
@@ -44,12 +44,12 @@ export function useProductFormHelpers<TFormValues extends { items?: ProductIngre
 
   const addIngredient = (newItem: ItemResponse) => {
     const items = getItems();
-    if (items.find((item) => item.ingredientId === newItem.id)) return;
+    if (items.find((item) => item.itemId === newItem.id)) return;
 
     form.setValue(
       "items" as Path<TFormValues>,
       [...items, {
-        ingredientId: newItem.id,
+        itemId: newItem.id,
         quantity: 0,
         name: newItem.name,
         unit: newItem.unit,
@@ -57,20 +57,20 @@ export function useProductFormHelpers<TFormValues extends { items?: ProductIngre
     );
   };
 
-  const removeIngredient = (ingredientId: string) => {
+  const removeIngredient = (itemId: string) => {
     const items = getItems();
     form.setValue(
       "items" as Path<TFormValues>,
-      items.filter((item) => item.ingredientId !== ingredientId) as any,
+      items.filter((item) => item.itemId !== itemId) as any,
     );
   };
 
-  const updateQuantity = (ingredientId: string, quantity: number) => {
+  const updateQuantity = (itemId: string, quantity: number) => {
     const items = getItems();
     form.setValue(
       "items" as Path<TFormValues>,
       items.map((item) =>
-        item.ingredientId === ingredientId ? { ...item, quantity } : item,
+        item.itemId === itemId ? { ...item, quantity } : item,
       ) as any,
     );
   };

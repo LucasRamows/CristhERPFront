@@ -41,7 +41,7 @@ export interface CreateProductFormProps {
 }
 
 export interface IngredientFormItem {
-  ingredientId: string;
+  itemId: string;
   name: string;
   unit: string;
   quantity: number;

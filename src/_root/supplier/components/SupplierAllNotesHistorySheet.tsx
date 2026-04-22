@@ -202,12 +202,12 @@ export function SupplierAllNotesHistorySheet({
                               </span>
                               <div className="flex flex-col">
                                 <span className="font-black text-foreground text-xs uppercase tracking-tight">
-                                  {item.ingredient?.name ||
-                                    `Insumo #${item.ingredientId.slice(-4)}`}
+                                  {item.item?.name ||
+                                    `Insumo #${item.itemId.slice(-4)}`}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                                   {formatMoney(item.unitPrice)} p/{" "}
-                                  {item.ingredient?.unit || "un"}
+                                  {item.item?.unit || "un"}
                                 </span>
                               </div>
                             </div>
